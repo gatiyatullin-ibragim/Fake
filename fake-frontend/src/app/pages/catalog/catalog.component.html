@@ -1,88 +1,87 @@
 <div class="catalog-page">
 
-    <!-- ── Шапка каталога ─────────────────────────────────────────── -->
-    <div class="catalog-header">
-      <p class="catalog-tagline">НОВАЯ КОЛЛЕКЦИЯ 2025</p>
-      <h1 class="catalog-title">КАТАЛОГ ТОВАРОВ</h1>
-      <p class="catalog-subtitle">
-        Премиум качество по честной цене. Оригинал 100%
-        <span class="asterisk">*</span>
-      </p>
-      <p class="disclaimer"><span class="asterisk">*</span> почти оригинал. возможны небольшие отличия от оригинала</p>
-    </div>
-  
-    <!-- ── Фильтры категорий ───────────────────────────────────────── -->
-    <div class="category-filters">
+  <!-- ── Шапка каталога ─────────────────────────────────────────── -->
+  <div class="catalog-header">
+    <p class="catalog-tagline">НОВАЯ КОЛЛЕКЦИЯ 2025</p>
+    <h1 class="catalog-title">КАТАЛОГ ТОВАРОВ</h1>
+    <p class="catalog-subtitle">
+      Премиум качество по честной цене. Оригинал 100%
+      <span class="asterisk">*</span>
+    </p>
+    <p class="disclaimer"><span class="asterisk">*</span> почти оригинал. возможны небольшие отличия от оригинала</p>
+  </div>
+
+  <!-- ── Фильтры категорий ───────────────────────────────────────── -->
+  <div class="category-filters">
+    <button
+      class="category-btn"
+      [class.active]="selectedCategory === null"
+      (click)="onCategoryClick(null)">
+      ВСЕ ТОВАРЫ
+    </button>
+
+    @for (category of categories; track category.id) {
       <button
         class="category-btn"
-        [class.active]="selectedCategory === null"
-        (click)="onCategoryClick(null)">
-        ВСЕ ТОВАРЫ
+        [class.active]="selectedCategory === category.slug"
+        (click)="onCategoryClick(category.slug)">
+        {{ category.name | uppercase }}
       </button>
-  
-      @for (category of categories; track category.id) {
-        <button
-          class="category-btn"
-          [class.active]="selectedCategory === category.slug"
-          (click)="onCategoryClick(category.slug)">
-          {{ category.name | uppercase }}
-        </button>
-      }
+    }
+  </div>
+
+  <!-- ── Загрузка ───────────────────────────────────────────────── -->
+  @if (isLoading) {
+    <div class="state-container">
+      <div class="spinner"></div>
+      <p>Загружаем товары...</p>
     </div>
-  
-    <!-- ── Состояние загрузки ─────────────────────────────────────── -->
-    @if (isLoading) {
+  }
+
+  <!-- ── Ошибка ─────────────────────────────────────────────────── -->
+  @if (errorMessage) {
+    <div class="state-container error">
+      <p>⚠ {{ errorMessage }}</p>
+    </div>
+  }
+
+  <!-- ── Сетка товаров ──────────────────────────────────────────── -->
+  @if (!isLoading && !errorMessage) {
+    @if (products.length === 0) {
       <div class="state-container">
-        <div class="spinner"></div>
-        <p>Загружаем товары...</p>
+        <p>В этой категории пока нет товаров.</p>
       </div>
-    }
-  
-    <!-- ── Ошибка ─────────────────────────────────────────────────── -->
-    @if (errorMessage) {
-      <div class="state-container error">
-        <p>⚠ {{ errorMessage }}</p>
-      </div>
-    }
-  
-    <!-- ── Сетка товаров ──────────────────────────────────────────── -->
-    @if (!isLoading && !errorMessage) {
-      @if (products.length === 0) {
-        <div class="state-container">
-          <p>В этой категории пока нет товаров.</p>
-        </div>
-      } @else {
-        <div class="products-grid">
-          @for (product of products; track product.id) {
-            <div class="product-card">
-              <div class="product-image-wrap">
-                <img [src]="product.image" [alt]="product.name" class="product-image" />
-                @if (!product.inStock) {
-                  <span class="badge out-of-stock-badge">НЕТ В НАЛИЧИИ</span>
+    } @else {
+      <div class="products-grid">
+        @for (product of products; track product.id) {
+          <a class="product-card" [routerLink]="['/product', product.id]">
+            <div class="product-image-wrap">
+              <img [src]="product.image" [alt]="product.name" class="product-image" />
+              @if (!product.inStock) {
+                <span class="badge out-of-stock-badge">НЕТ В НАЛИЧИИ</span>
+              }
+            </div>
+            <div class="product-info">
+              <span class="product-brand">{{ product.brand }}</span>
+              <h3 class="product-name">{{ product.name }}</h3>
+              <p class="product-desc">{{ product.description }}</p>
+              <div class="product-footer">
+                <span class="product-price">{{ product.price | currency:'₸ ':'code':'1.0-0' }}</span>
+                @if (product.inStock) {
+                  <button class="btn-cart" (click)="onAddToCart(product); $event.preventDefault()">
+                    В КОРЗИНУ
+                  </button>
+                } @else {
+                  <button class="btn-cart disabled" disabled (click)="$event.preventDefault()">
+                    НЕТ В НАЛИЧИИ
+                  </button>
                 }
               </div>
-              <div class="product-info">
-                <span class="product-brand">{{ product.brand }}</span>
-                <h3 class="product-name">{{ product.name }}</h3>
-                <p class="product-desc">{{ product.description }}</p>
-                <div class="product-footer">
-                  <span class="product-price">{{ product.price | currency:'₸ ':'code':'1.0-0' }}</span>
-                  @if (product.inStock) {
-                    <button class="btn-cart" (click)="onAddToCart(product)">
-                      В КОРЗИНУ
-                    </button>
-                  } @else {
-                    <button class="btn-cart disabled" disabled>
-                      НЕТ В НАЛИЧИИ
-                    </button>
-                  }
-                </div>
-              </div>
             </div>
-          }
-        </div>
-      }
+          </a>
+        }
+      </div>
     }
-  
-  </div>
-  
+  }
+
+</div>

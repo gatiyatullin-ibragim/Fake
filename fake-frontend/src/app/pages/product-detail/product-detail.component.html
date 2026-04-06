@@ -1,0 +1,199 @@
+<div class="detail-page">
+
+    <!-- ── Загрузка ──────────────────────────────────────────────── -->
+    @if (isLoading) {
+      <div class="state-screen">
+        <div class="spinner"></div>
+        <p>Загружаем товар...</p>
+      </div>
+    }
+  
+    <!-- ── Ошибка ────────────────────────────────────────────────── -->
+    @if (errorMessage) {
+      <div class="state-screen error">
+        <p class="error-code">404</p>
+        <p class="error-text">{{ errorMessage }}</p>
+        <a routerLink="/catalog" class="btn-back">← Вернуться в каталог</a>
+      </div>
+    }
+  
+    <!-- ── Основной контент ───────────────────────────────────────── -->
+    @if (!isLoading && !errorMessage && product) {
+      <div class="detail-container">
+  
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb">
+          <a routerLink="/">Главная</a>
+          <span class="breadcrumb-sep">/</span>
+          <a routerLink="/catalog">Каталог</a>
+          <span class="breadcrumb-sep">/</span>
+          <span>{{ product.name }}</span>
+        </nav>
+  
+        <div class="detail-layout">
+  
+          <!-- ══════════════════════════════════════════════════════
+               ЛЕВАЯ ЧАСТЬ: галерея
+          ══════════════════════════════════════════════════════ -->
+          <div class="image-section">
+  
+            <!-- Главное фото + стрелки -->
+            <div class="image-main">
+              <img
+                [src]="images[activeImageIndex]"
+                [alt]="product.name"
+                class="product-img" />
+  
+              @if (!product.inStock) {
+                <div class="sold-out-overlay">
+                  <span>НЕТ В НАЛИЧИИ</span>
+                </div>
+              }
+  
+              <!-- Стрелки (показываем только если фото больше одного) -->
+              @if (images.length > 1) {
+                <button class="arrow arrow-left" (click)="prevImage()">&#8592;</button>
+                <button class="arrow arrow-right" (click)="nextImage()">&#8594;</button>
+              }
+  
+              <!-- Счётчик фото -->
+              @if (images.length > 1) {
+                <div class="image-counter">
+                  {{ activeImageIndex + 1 }} / {{ images.length }}
+                </div>
+              }
+            </div>
+  
+            <!-- Thumbnails — кликабельные -->
+            @if (images.length > 1) {
+              <div class="image-thumbs">
+                @for (img of images; track $index) {
+                  <div
+                    class="thumb"
+                    [class.active]="activeImageIndex === $index"
+                    (click)="selectImage($index)">
+                    <img [src]="img" [alt]="'Фото ' + ($index + 1)" class="thumb-img" />
+                  </div>
+                }
+              </div>
+            }
+  
+          </div>
+  
+          <!-- ══════════════════════════════════════════════════════
+               ПРАВАЯ ЧАСТЬ: информация
+          ══════════════════════════════════════════════════════ -->
+          <div class="info-section">
+  
+            <div class="info-top">
+              <span class="product-brand">{{ product.brand }}</span>
+              <span class="product-category">{{ product.category.name }}</span>
+            </div>
+  
+            <h1 class="product-name">{{ product.name }}</h1>
+  
+            <div class="rating">
+              <span class="stars">★★★★☆</span>
+              <span class="rating-count">4.0 (128 отзывов)</span>
+            </div>
+  
+            <div class="price-block">
+              <span class="price-current">{{ product.price | currency:'':'':'1.0-0' }} ₸</span>
+              <span class="price-old">{{ (product.price * 1.4) | currency:'':'':'1.0-0' }} ₸</span>
+              <span class="price-discount">-30%</span>
+            </div>
+  
+            <p class="product-desc">{{ product.description }}</p>
+  
+            <div class="divider"></div>
+  
+            <!-- Размеры -->
+            <div class="size-section">
+              <div class="size-header">
+                <span class="size-label">РАЗМЕР</span>
+                @if (!selectedSize) {
+                  <span class="size-hint">Выберите размер</span>
+                } @else {
+                  <span class="size-selected">Выбран: {{ selectedSize }}</span>
+                }
+              </div>
+              <div class="size-grid">
+                @for (size of sizes; track size) {
+                  <button
+                    class="size-btn"
+                    [class.active]="selectedSize === size"
+                    (click)="selectSize(size)">
+                    {{ size }}
+                  </button>
+                }
+              </div>
+            </div>
+  
+            <!-- Кнопки -->
+            <div class="actions">
+              @if (product.inStock) {
+                <button
+                  class="btn-cart"
+                  [class.success]="addedToCart"
+                  [disabled]="!selectedSize"
+                  (click)="onAddToCart()">
+                  @if (addedToCart) { ✓ ДОБАВЛЕНО В КОРЗИНУ }
+                  @else { В КОРЗИНУ }
+                </button>
+              } @else {
+                <button class="btn-cart disabled" disabled>НЕТ В НАЛИЧИИ</button>
+              }
+              <button class="btn-wishlist">♡</button>
+            </div>
+  
+            @if (!selectedSize && product.inStock) {
+              <p class="size-warning">* Выберите размер перед добавлением в корзину</p>
+            }
+  
+            <div class="divider"></div>
+  
+            <!-- Характеристики -->
+            <div class="specs-section">
+              <h3 class="specs-title">ХАРАКТЕРИСТИКИ</h3>
+              <ul class="specs-list">
+                @for (spec of specs; track spec.label) {
+                  <li class="spec-row">
+                    <span class="spec-label">{{ spec.label }}</span>
+                    <span class="spec-value">{{ spec.value }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+  
+            <div class="divider"></div>
+  
+            <!-- Доставка -->
+            <div class="delivery-section">
+              <div class="delivery-item">
+                <span class="delivery-icon">🚚</span>
+                <div>
+                  <p class="delivery-title">Бесплатная доставка</p>
+                  <p class="delivery-sub">При заказе от 5 000 ₸</p>
+                </div>
+              </div>
+              <div class="delivery-item">
+                <span class="delivery-icon">↩</span>
+                <div>
+                  <p class="delivery-title">Возврат 30 дней</p>
+                  <p class="delivery-sub">Без вопросов и объяснений</p>
+                </div>
+              </div>
+            </div>
+  
+          </div>
+        </div>
+  
+        <div class="back-section">
+          <a routerLink="/catalog" class="btn-back">← Вернуться в каталог</a>
+        </div>
+  
+      </div>
+    }
+  
+  </div>
+  

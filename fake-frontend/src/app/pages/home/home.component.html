@@ -1,0 +1,121 @@
+<div class="home-page">
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- HERO SECTION                                                   -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <section class="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-content">
+        <p class="hero-eyebrow">НОВАЯ КОЛЛЕКЦИЯ 2026</p>
+        <h1 class="hero-title">
+          JUST<br>FAKE IT.<br>
+          <span class="hero-title-accent">PREMIUM</span>
+        </h1>
+        <p class="hero-subtitle">
+          Оригинал 99%*<br>
+          <span class="hero-disclaimer">* возможны незначительные отличия от оригинала</span>
+        </p>
+        <div class="hero-actions">
+          <a routerLink="/catalog" class="btn-primary">СМОТРЕТЬ КОЛЛЕКЦИЮ</a>
+          <a routerLink="/catalog" class="btn-secondary">ВСЕ ТОВАРЫ</a>
+        </div>
+      </div>
+      <div class="hero-brand">АБИБАС</div>
+    </section>
+  
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- TICKER TAPE                                                    -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <div class="ticker">
+      <div class="ticker-track">
+        <span>АБИБАС ✦ НАЙКИ ✦ ПУМО ✦ ДЖОРДАН ✦ РИИБОК ✦ АБИБАС ✦ НАЙКИ ✦ ПУМО ✦ ДЖОРДАН ✦ РИИБОК ✦ АБИБАС ✦ НАЙКИ ✦ ПУМО ✦ ДЖОРДАН ✦ РИИБОК ✦ АБИБАС ✦ НАЙКИ ✦ ПУМО ✦ ДЖОРДАН ✦ РИИБОК ✦</span>
+      </div>
+    </div>
+  
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- FEATURED BANNER                                                -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <section class="featured-banner">
+      <div class="featured-banner-inner">
+        <div class="featured-text">
+          <p class="featured-eyebrow">АБИБАС КЛАССИК</p>
+          <h2 class="featured-title">ТРИ ПОЛОСКИ.<br>ОДНА ЦЕНА.</h2>
+          <p class="featured-desc">
+            Легендарные три полоски теперь доступны каждому.<br>
+            Сделано с любовью в Урумчи.
+          </p>
+          <a routerLink="/catalog" [queryParams]="{category: 't-shirts'}" class="btn-primary dark">
+            КУПИТЬ СЕЙЧАС
+          </a>
+        </div>
+        <div class="featured-visual">
+          <div class="featured-stripes">
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+          </div>
+          <div class="featured-price-tag">
+            <span class="price-tag-label">ОТ</span>
+            <span class="price-tag-amount">1 999 ₸</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- КАТЕГОРИИ — GRID                                               -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <section class="categories-section">
+      <div class="section-header">
+        <h2 class="section-title">SHOP BY CATEGORY</h2>
+        <a routerLink="/catalog" class="section-link">Смотреть всё →</a>
+      </div>
+      <div class="categories-grid">
+        @for (cat of categories; track cat.slug; let i = $index) {
+          <a routerLink="/catalog"
+             [queryParams]="{category: cat.slug}"
+             class="category-tile"
+             [class.tile-large]="i === 0 || i === 1">
+            <div class="tile-bg" [class]="'tile-bg-' + (i + 1)"></div>
+            <div class="tile-content">
+              <h3 class="tile-name">{{ cat.name }}</h3>
+              <span class="tile-cta">{{ cat.label }}</span>
+            </div>
+          </a>
+        }
+      </div>
+    </section>
+  
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- PROMO STRIP                                                    -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <section class="promo-strip">
+      <div class="promo-item">
+        <span class="promo-icon">🚚</span>
+        <span class="promo-text">БЕСПЛАТНАЯ ДОСТАВКА от 5 000 ₸</span>
+      </div>
+      <div class="promo-divider"></div>
+      <div class="promo-item">
+        <span class="promo-icon">✦</span>
+        <span class="promo-text">ОРИГИНАЛ 99% ГАРАНТИРОВАНО</span>
+      </div>
+      <div class="promo-divider"></div>
+      <div class="promo-item">
+        <span class="promo-icon">↩</span>
+        <span class="promo-text">ВОЗВРАТ В ТЕЧЕНИЕ 30 ДНЕЙ</span>
+      </div>
+    </section>
+  
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- CALL TO ACTION BANNER                                          -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <section class="cta-banner">
+      <div class="cta-content">
+        <h2 class="cta-title">НЕ НАЙДЁШЬ ДЕШЕВЛЕ.*</h2>
+        <p class="cta-sub">* среди магазинов с таким же сомнительным ассортиментом</p>
+        <a routerLink="/catalog" class="btn-primary">ПЕРЕЙТИ В КАТАЛОГ</a>
+      </div>
+    </section>
+  
+  </div>
+  
