@@ -1,0 +1,45 @@
+<div class="auth-page">
+  <section class="auth-card">
+    <h1>Профиль</h1>
+
+    <ng-container *ngIf="user(); else loginPrompt">
+      <div class="profile-row">
+        <span class="profile-label">Пользователь</span>
+        <span>{{ user()?.username }}</span>
+      </div>
+      <div class="profile-row">
+        <span class="profile-label">E-mail</span>
+        <span>{{ user()?.email || 'Не указан' }}</span>
+      </div>
+
+      <div class="preferences-block">
+        <h2>История интересов</h2>
+
+        <div *ngIf="loading(); else preferencesList" class="loader">Загрузка...</div>
+
+        <ng-template #preferencesList>
+          <div *ngIf="preferenceKeys().length > 0; else noPreferences">
+            <div class="preference-row" *ngFor="let tag of preferenceKeys()">
+              <span>{{ tag }}</span>
+              <span>{{ preferences()?.[tag] }}</span>
+            </div>
+          </div>
+          <ng-template #noPreferences>
+            <p class="empty-state">Предпочтения пока не накоплены.</p>
+          </ng-template>
+        </ng-template>
+      </div>
+
+      <button type="button" (click)="resetPreferences()">Очистить историю интересов</button>
+      <a routerLink="/" class="link-button">На главную</a>
+
+      <p class="success" *ngIf="message()">{{ message() }}</p>
+      <p class="error" *ngIf="error()">{{ error() }}</p>
+    </ng-container>
+
+    <ng-template #loginPrompt>
+      <p>Для доступа к профилю авторизуйтесь.</p>
+      <a routerLink="/login" class="link-button">Войти</a>
+    </ng-template>
+  </section>
+</div>

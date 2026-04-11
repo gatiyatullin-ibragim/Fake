@@ -1,0 +1,23 @@
+<nav class="navbar">
+  <div class="navbar__brand">
+    <a routerLink="/">FAKE</a>
+  </div>
+
+  <div class="navbar__links">
+    <a routerLink="/">Главная</a>
+    <a routerLink="/catalog">Каталог</a>
+    <a routerLink="/profile" *ngIf="isLoggedIn()">Профиль</a>
+  </div>
+
+  <div class="navbar__actions">
+    <ng-container *ngIf="isLoggedIn(); else authLinks">
+      <span class="navbar__user">{{ user()?.username }}</span>
+      <button type="button" (click)="logout()">Выйти</button>
+    </ng-container>
+
+    <ng-template #authLinks>
+      <a routerLink="/login">Войти</a>
+      <a routerLink="/register">Регистрация</a>
+    </ng-template>
+  </div>
+</nav>
