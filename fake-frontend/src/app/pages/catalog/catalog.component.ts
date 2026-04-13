@@ -14,6 +14,7 @@ import { Category } from '../../models/category.model';
   styleUrl: './catalog.component.css'
 })
 export class CatalogComponent implements OnInit {
+  allProducts: Product[] = [];
   products: Product[] = [];
   categories: Category[] = [];
   selectedCategory: string | null = null;
@@ -27,23 +28,17 @@ export class CatalogComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadCategories();
-    this.loadProducts();
+    this.loadCatalogData();
   }
 
-  loadCategories(): void {
-    this.productService.getCategories().subscribe({
-      next: (data) => (this.categories = data),
-      error: () => (this.errorMessage = 'Не удалось загрузить категории'),
-    });
-  }
-
-  loadProducts(categorySlug?: string): void {
+  loadCatalogData(): void {
     this.isLoading = true;
     this.errorMessage = '';
-    this.productService.getProducts(categorySlug).subscribe({
+    this.productService.getProducts().subscribe({
       next: (data) => {
+        this.allProducts = data;
         this.products = data;
+        this.buildCategories(data);
         this.isLoading = false;
       },
       error: () => {
@@ -53,9 +48,27 @@ export class CatalogComponent implements OnInit {
     });
   }
 
+  buildCategories(products: Product[]): void {
+    const map = new Map<string, Category>();
+    for (const product of products) {
+      if (!map.has(product.category.slug)) {
+        map.set(product.category.slug, {
+          id: map.size + 1,
+          name: product.category.name,
+          slug: product.category.slug,
+        });
+      }
+    }
+    this.categories = Array.from(map.values());
+  }
+
   onCategoryClick(slug: string | null): void {
     this.selectedCategory = slug;
-    this.loadProducts(slug ?? undefined);
+    if (!slug) {
+      this.products = this.allProducts;
+      return;
+    }
+    this.products = this.allProducts.filter((p) => p.category.slug === slug);
   }
 
   onAddToCart(product: Product): void {

@@ -1,3 +1,5 @@
+from decimal import Decimal, InvalidOperation
+
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -93,3 +95,43 @@ def track_click(request):
 	pref.increment_tags(product.tags or [])
 
 	return Response({'tracked': True, 'preferences': pref.counts})
+
+
+@api_view(['POST'])
+def create_product(request):
+	data = request.data or {}
+
+	name = (data.get('name') or '').strip()
+	description = (data.get('description') or '').strip()
+	image = (data.get('image') or '').strip()
+	category = (data.get('category') or '').strip()
+	brand = (data.get('brand') or '').strip()
+	in_stock = bool(data.get('in_stock', True))
+	tags = data.get('tags') or []
+	price_raw = data.get('price')
+
+	if not name:
+		return Response({'error': 'Поле name обязательно'}, status=400)
+
+	try:
+		price = Decimal(str(price_raw))
+	except (InvalidOperation, TypeError):
+		return Response({'error': 'Поле price должно быть числом'}, status=400)
+
+	if not isinstance(tags, list):
+		return Response({'error': 'Поле tags должно быть массивом'}, status=400)
+
+	normalized_tags = [str(tag).strip() for tag in tags if str(tag).strip()]
+
+	product = Product.objects.create(
+		name=name,
+		description=description,
+		price=price,
+		image=image,
+		category=category,
+		in_stock=in_stock,
+		brand=brand,
+		tags=normalized_tags,
+	)
+
+	return Response(serialize_product(product), status=201)

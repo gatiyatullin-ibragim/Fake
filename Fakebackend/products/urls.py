@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.get_products, name='products'),
+    path('create/', views.create_product, name='product-create'),
     path('<int:pk>/', views.get_product_detail, name='product-detail'),
     path('similar/<int:pk>/', views.get_similar_products, name='product-similar'),
     path('track-click/', views.track_click, name='track-click'),
