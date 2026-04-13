@@ -1,0 +1,74 @@
+<div class="orders-page">
+  <h1 class="orders-title">МОИ ЗАКАЗЫ</h1>
+
+  @if (isLoading) {
+    <div class="state-screen">
+      <div class="spinner"></div>
+      <p>Загружаем заказы...</p>
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="state-screen error"><p>⚠ {{ errorMessage }}</p></div>
+  }
+
+  @if (!isLoading && !errorMessage && orders.length === 0) {
+    <div class="empty-orders">
+      <p class="empty-icon">📦</p>
+      <p class="empty-text">У вас пока нет заказов</p>
+      <a routerLink="/catalog" class="btn-shop">Перейти в каталог</a>
+    </div>
+  }
+
+  @if (!isLoading && orders.length > 0) {
+    <div class="orders-list">
+      @for (order of orders; track order.id) {
+
+        <!-- Карточка заказа -->
+        <div class="order-card" [class.expanded]="selectedOrder?.id === order.id">
+          <div class="order-header" (click)="openDetail(order)">
+            <div class="order-meta">
+              <span class="order-id"># {{ order.id }}</span>
+              <span class="order-date">{{ order.created_at | date:'dd.MM.yyyy, HH:mm' }}</span>
+            </div>
+            <div class="order-info">
+              <span class="order-items">{{ order.items_count }} товар(а)</span>
+              <span class="order-total">{{ order.total_price | number:'1.0-0' }} ₸</span>
+              <span class="order-status" [class]="'status-' + order.status">
+                {{ statusLabel[order.status] }}
+              </span>
+            </div>
+            <span class="order-toggle">{{ selectedOrder?.id === order.id ? '▲' : '▼' }}</span>
+          </div>
+
+          <!-- Детали заказа -->
+          @if (selectedOrder?.id === order.id) {
+            <div class="order-detail">
+              @if (isLoadingDetail) {
+                <div class="detail-loading">Загружаем детали...</div>
+              }
+              @if (!isLoadingDetail && selectedOrder?.items) {
+                <div class="detail-items">
+                  @for (item of selectedOrder!.items; track item.id) {
+                    <div class="detail-item">
+                      <img [src]="item.image" [alt]="item.product_name" class="detail-img" />
+                      <div class="detail-info">
+                        <span class="detail-name">{{ item.product_name }}</span>
+                        <span class="detail-qty">{{ item.quantity }} шт. × {{ item.price | number:'1.0-0' }} ₸</span>
+                      </div>
+                      <span class="detail-cost">{{ item.cost | number:'1.0-0' }} ₸</span>
+                    </div>
+                  }
+                </div>
+                <div class="detail-total">
+                  Итого: <strong>{{ selectedOrder!.total_price | number:'1.0-0' }} ₸</strong>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+      }
+    </div>
+  }
+</div>

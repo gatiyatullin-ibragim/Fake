@@ -1,0 +1,51 @@
+.orders-page { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
+.orders-title { font-size: 32px; font-weight: 700; letter-spacing: 4px; margin-bottom: 40px; }
+
+.state-screen { text-align: center; padding: 60px; color: #666; }
+.spinner { width: 36px; height: 36px; border: 3px solid #e5e5e5; border-top-color: #111; border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 16px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty-orders { text-align: center; padding: 80px 20px; }
+.empty-icon { font-size: 56px; margin-bottom: 12px; }
+.empty-text { font-size: 18px; color: #666; margin-bottom: 24px; }
+.btn-shop { display: inline-block; padding: 14px 32px; background: #111; color: #fff; font-weight: 700; letter-spacing: 2px; text-decoration: none; }
+
+.orders-list { display: flex; flex-direction: column; gap: 12px; }
+
+.order-card { border: 1px solid #e5e5e5; overflow: hidden; transition: box-shadow 0.2s; }
+.order-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+.order-card.expanded { border-color: #111; }
+
+.order-header {
+  display: grid; grid-template-columns: 1fr 1fr auto;
+  align-items: center; gap: 16px;
+  padding: 18px 20px; cursor: pointer;
+}
+.order-header:hover { background: #fafafa; }
+
+.order-meta { display: flex; flex-direction: column; gap: 4px; }
+.order-id { font-size: 16px; font-weight: 700; }
+.order-date { font-size: 13px; color: #999; }
+
+.order-info { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.order-items { font-size: 14px; color: #666; }
+.order-total { font-size: 16px; font-weight: 600; }
+
+.order-status { font-size: 12px; font-weight: 600; letter-spacing: 1px; padding: 4px 10px; border-radius: 20px; }
+.status-pending   { background: #fef3c7; color: #92400e; }
+.status-completed { background: #dcfce7; color: #166534; }
+.status-cancelled { background: #fee2e2; color: #991b1b; }
+
+.order-toggle { font-size: 12px; color: #999; }
+
+/* Детали */
+.order-detail { border-top: 1px solid #e5e5e5; padding: 20px; background: #fafafa; }
+.detail-loading { color: #999; font-size: 14px; text-align: center; padding: 12px; }
+.detail-items { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+.detail-item { display: grid; grid-template-columns: 60px 1fr auto; gap: 14px; align-items: center; }
+.detail-img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; }
+.detail-info { display: flex; flex-direction: column; gap: 4px; }
+.detail-name { font-size: 14px; font-weight: 500; }
+.detail-qty { font-size: 13px; color: #666; }
+.detail-cost { font-size: 15px; font-weight: 600; white-space: nowrap; }
+.detail-total { text-align: right; font-size: 16px; padding-top: 12px; border-top: 1px solid #e5e5e5; }

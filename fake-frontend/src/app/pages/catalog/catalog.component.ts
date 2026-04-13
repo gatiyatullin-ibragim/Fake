@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ProductService } from '../../core/services/product.service';
+import { CartService } from '../../core/services/cart-service';
 import { Product } from '../../models/product.model';
 import { Category } from '../../models/category.model';
 
@@ -18,8 +19,12 @@ export class CatalogComponent implements OnInit {
   selectedCategory: string | null = null;
   isLoading = true;
   errorMessage = '';
+  addedProductId: number | null = null;
 
-  constructor(private productService: ProductService) {}
+  constructor(
+    private productService: ProductService,
+    private cartService: CartService,
+  ) {}
 
   ngOnInit(): void {
     this.loadCategories();
@@ -54,6 +59,18 @@ export class CatalogComponent implements OnInit {
   }
 
   onAddToCart(product: Product): void {
-    alert(`"${product.name}" добавлен в корзину!`);
+    if (!product.inStock) return;
+
+    this.cartService.addItem({
+      product_id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      brand: product.brand,
+      size: 'M',
+    });
+
+    this.addedProductId = product.id;
+    setTimeout(() => (this.addedProductId = null), 1500);
   }
 }

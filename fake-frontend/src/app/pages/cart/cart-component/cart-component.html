@@ -1,0 +1,86 @@
+<div class="cart-page">
+
+  <!-- ── Успешный заказ ──────────────────────────────────────────── -->
+  @if (orderSuccess) {
+    <div class="success-screen">
+      <div class="success-icon">✓</div>
+      <h2>Заказ оформлен!</h2>
+      <p>Перенаправляем в историю заказов...</p>
+    </div>
+  }
+
+  @if (!orderSuccess) {
+    <h1 class="cart-title">КОРЗИНА</h1>
+
+    <!-- ── Пустая корзина ──────────────────────────────────────── -->
+    @if (items().length === 0) {
+      <div class="empty-cart">
+        <p class="empty-icon">🛒</p>
+        <p class="empty-text">Корзина пуста</p>
+        <a routerLink="/catalog" class="btn-continue">Перейти в каталог</a>
+      </div>
+    }
+
+    <!-- ── Товары ───────────────────────────────────────────────── -->
+    @if (items().length > 0) {
+      <div class="cart-layout">
+
+        <!-- Список позиций -->
+        <div class="cart-items">
+          @for (item of items(); track item.product_id + item.size) {
+            <div class="cart-item">
+              <img [src]="item.image" [alt]="item.name" class="item-img" />
+              <div class="item-info">
+                <span class="item-brand">{{ item.brand }}</span>
+                <h3 class="item-name">{{ item.name }}</h3>
+                <span class="item-size">Размер: {{ item.size }}</span>
+                <span class="item-price">{{ item.price | number:'1.0-0' }} ₸</span>
+              </div>
+              <div class="item-controls">
+                <div class="qty-control">
+                  <button class="qty-btn" (click)="updateQuantity(item.product_id, item.size, item.quantity - 1)">−</button>
+                  <span class="qty-value">{{ item.quantity }}</span>
+                  <button class="qty-btn" (click)="updateQuantity(item.product_id, item.size, item.quantity + 1)">+</button>
+                </div>
+                <span class="item-total">{{ item.price * item.quantity | number:'1.0-0' }} ₸</span>
+                <button class="btn-remove" (click)="removeItem(item.product_id, item.size)">✕</button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Итог и оформление -->
+        <div class="cart-summary">
+          <h2 class="summary-title">ИТОГО</h2>
+          <div class="summary-row">
+            <span>Товары ({{ count() }} шт.)</span>
+            <span>{{ total() | number:'1.0-0' }} ₸</span>
+          </div>
+          <div class="summary-row delivery">
+            <span>Доставка</span>
+            <span>{{ total() >= 5000 ? 'Бесплатно' : '500 ₸' }}</span>
+          </div>
+          <div class="summary-divider"></div>
+          <div class="summary-row total">
+            <span>К оплате</span>
+            <span>{{ (total() >= 5000 ? total() : total() + 500) | number:'1.0-0' }} ₸</span>
+          </div>
+
+          @if (errorMessage) {
+            <p class="error-msg">{{ errorMessage }}</p>
+          }
+
+          <button
+            class="btn-checkout"
+            [disabled]="isOrdering"
+            (click)="checkout()">
+            {{ isOrdering ? 'Оформляем...' : 'ОФОРМИТЬ ЗАКАЗ' }}
+          </button>
+
+          <a routerLink="/catalog" class="btn-continue-small">← Продолжить покупки</a>
+        </div>
+
+      </div>
+    }
+  }
+</div>
