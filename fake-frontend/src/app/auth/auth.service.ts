@@ -12,18 +12,26 @@ export interface Preferences {
   [tag: string]: number;
 }
 
+interface AuthResponse {
+  user: User;
+  access: string;
+  refresh: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly apiUrl = 'http://localhost:8000/api';
+  private readonly apiUrl = 'http://localhost:8000/api/users';
+  private readonly accessTokenKey = 'auth_access_token';
+  private readonly refreshTokenKey = 'auth_refresh_token';
   user = signal<User | null>(null);
 
   constructor(private http: HttpClient) {
-    this.loadUser();
+    if (this.getAccessToken()) {
+      this.loadUser();
+    }
   }
-
-  private corsOptions = { withCredentials: true } as const;
 
   private normalizeError(error: unknown): string {
     if (error instanceof HttpErrorResponse && error.error) {
@@ -37,10 +45,11 @@ export class AuthService {
 
   loadUser(): void {
     this.http
-      .get<{ user: User }>(`${this.apiUrl}/user/`, this.corsOptions)
+      .get<{ user: User }>(`${this.apiUrl}/user/`)
       .pipe(
         tap((response) => this.user.set(response.user)),
         catchError(() => {
+          this.clearTokens();
           this.user.set(null);
           return of(null);
         })
@@ -48,44 +57,84 @@ export class AuthService {
       .subscribe();
   }
 
+  private saveTokens(access: string, refresh: string): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    localStorage.setItem(this.accessTokenKey, access);
+    localStorage.setItem(this.refreshTokenKey, refresh);
+  }
+
+  private clearTokens(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    localStorage.removeItem(this.accessTokenKey);
+    localStorage.removeItem(this.refreshTokenKey);
+  }
+
+  getAccessToken(): string | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    return localStorage.getItem(this.accessTokenKey);
+  }
+
+  getRefreshToken(): string | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    return localStorage.getItem(this.refreshTokenKey);
+  }
+
   register(credentials: {
     username: string;
     email: string;
     password: string;
     password2: string;
-  }): Observable<{ user: User }> {
+  }): Observable<AuthResponse> {
     return this.http
-      .post<{ user: User }>(`${this.apiUrl}/register/`, credentials, this.corsOptions)
+      .post<AuthResponse>(`${this.apiUrl}/register/`, credentials)
       .pipe(
-        tap((response) => this.user.set(response.user)),
+        tap((response) => {
+          this.saveTokens(response.access, response.refresh);
+          this.user.set(response.user);
+        }),
         catchError((error) => throwError(() => new Error(this.normalizeError(error))))
       );
   }
 
-  login(credentials: { username: string; password: string }): Observable<{ user: User }> {
+  login(credentials: { username: string; password: string }): Observable<AuthResponse> {
     return this.http
-      .post<{ user: User }>(`${this.apiUrl}/login/`, credentials, this.corsOptions)
+      .post<AuthResponse>(`${this.apiUrl}/login/`, credentials)
       .pipe(
-        tap((response) => this.user.set(response.user)),
+        tap((response) => {
+          this.saveTokens(response.access, response.refresh);
+          this.user.set(response.user);
+        }),
         catchError((error) => throwError(() => new Error(this.normalizeError(error))))
       );
   }
 
   logout(): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/logout/`, {}, this.corsOptions).pipe(
-      tap(() => this.user.set(null)),
+    const refresh = this.getRefreshToken();
+    return this.http.post<void>(`${this.apiUrl}/logout/`, { refresh }).pipe(
+      tap(() => {
+        this.clearTokens();
+        this.user.set(null);
+      }),
       catchError((error) => throwError(() => new Error(this.normalizeError(error))))
     );
   }
 
   getPreferences(): Observable<{ preferences: Preferences }> {
-    return this.http.get<{ preferences: Preferences }>(`${this.apiUrl}/preferences/`, this.corsOptions).pipe(
+    return this.http.get<{ preferences: Preferences }>(`${this.apiUrl}/preferences/`).pipe(
       catchError((error) => throwError(() => new Error(this.normalizeError(error))))
     );
   }
 
   resetPreferences(): Observable<{ preferences: Preferences }> {
-    return this.http.post<{ preferences: Preferences }>(`${this.apiUrl}/preferences/reset/`, {}, this.corsOptions).pipe(
+    return this.http.post<{ preferences: Preferences }>(`${this.apiUrl}/preferences/reset/`, {}).pipe(
       catchError((error) => throwError(() => new Error(this.normalizeError(error))))
     );
   }

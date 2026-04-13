@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 
 @Injectable({ providedIn: 'root' })
 export class TrackingService {
-  private apiUrl = 'http://localhost:8000/api/products/track-view/';
+  private apiUrl = 'http://localhost:8000/api/products/track-click/';
 
   constructor(private http: HttpClient) {}
 

@@ -31,6 +31,11 @@ export class RegisterComponent {
       return;
     }
 
+    if (this.form.value.password !== this.form.value.password2) {
+      this.serverError.set('Пароли не совпадают');
+      return;
+    }
+
     this.serverError.set('');
     const payload = this.form.value as {
       username: string;
@@ -43,7 +48,7 @@ export class RegisterComponent {
       next: () => this.router.navigate(['/']),
       error: (error) => {
         console.error(error);
-        this.serverError.set('Ошибка регистрации. Попробуйте другой логин или email.');
+        this.serverError.set(error?.message || 'Ошибка регистрации. Попробуйте другой логин или email.');
       }
     });
   }

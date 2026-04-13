@@ -3,6 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ProductService } from '../../core/services/product.service';
 import { CartService } from '../../core/services/cart-service';
+import { TrackingService } from '../../core/services/tracking-service';
 import { Product } from '../../models/product.model';
 
 @Component({
@@ -14,6 +15,7 @@ import { Product } from '../../models/product.model';
 })
 export class ProductDetailComponent implements OnInit {
   product: Product | null = null;
+  similarProducts: Product[] = [];
   isLoading = true;
   errorMessage = '';
   selectedSize: string | null = null;
@@ -37,6 +39,7 @@ export class ProductDetailComponent implements OnInit {
     private route: ActivatedRoute,
     private productService: ProductService,
     private cartService: CartService,
+    private trackingService: TrackingService,
   ) {}
 
   ngOnInit(): void {
@@ -52,12 +55,26 @@ export class ProductDetailComponent implements OnInit {
           `https://placehold.co/600x600/222/fff?text=Фото+3`,
           `https://placehold.co/600x600/333/fff?text=Фото+4`,
         ];
+
+        this.trackingService.trackView(id);
+        this.loadSimilarProducts(id);
         this.isLoading = false;
       },
       error: () => {
         this.errorMessage = 'Товар не найден';
         this.isLoading = false;
       }
+    });
+  }
+
+  loadSimilarProducts(id: number): void {
+    this.productService.getSimilarProducts(id).subscribe({
+      next: (products) => {
+        this.similarProducts = products;
+      },
+      error: () => {
+        this.similarProducts = [];
+      },
     });
   }
 

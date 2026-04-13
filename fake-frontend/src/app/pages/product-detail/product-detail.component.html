@@ -191,6 +191,23 @@
         <div class="back-section">
           <a routerLink="/catalog" class="btn-back">← Вернуться в каталог</a>
         </div>
+
+        @if (similarProducts.length) {
+          <section class="similar-products">
+            <h3>Похожие товары</h3>
+            <div class="similar-products__grid">
+              @for (item of similarProducts; track item.id) {
+                <a class="similar-products__item" [routerLink]="['/product', item.id]">
+                  <img [src]="item.image" [alt]="item.name" />
+                  <div class="similar-products__meta">
+                    <strong>{{ item.name }}</strong>
+                    <span>{{ item.price | currency:'':'':'1.0-0' }} ₸</span>
+                  </div>
+                </a>
+              }
+            </div>
+          </section>
+        }
   
       </div>
     }

@@ -1,35 +1,12 @@
-import json
-
-from django.contrib.auth import authenticate, login as django_login, logout as django_logout
+from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from django.http import HttpResponse, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 from .models import UserPreference
-
-ALLOWED_ORIGIN = 'http://localhost:4200'
-
-
-def cors_headers(response: HttpResponse) -> HttpResponse:
-    response['Access-Control-Allow-Origin'] = ALLOWED_ORIGIN
-    response['Access-Control-Allow-Credentials'] = 'true'
-    response['Access-Control-Allow-Headers'] = 'Content-Type'
-    response['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    return response
-
-
-def preflight_response() -> HttpResponse:
-    return cors_headers(HttpResponse())
-
-
-def parse_json_body(request):
-    if not request.body:
-        return {}
-    try:
-        return json.loads(request.body.decode('utf-8'))
-    except json.JSONDecodeError:
-        return {}
 
 
 def user_data(user: User) -> dict:
@@ -45,114 +22,84 @@ def get_user_preferences(user: User) -> UserPreference:
     return preference
 
 
-@csrf_exempt
-@require_http_methods(['OPTIONS', 'POST'])
-def register(request):
-    if request.method == 'OPTIONS':
-        return preflight_response()
+def token_pair_for_user(user: User) -> dict:
+    refresh = RefreshToken.for_user(user)
+    return {
+        'access': str(refresh.access_token),
+        'refresh': str(refresh),
+    }
 
-    data = parse_json_body(request)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register(request):
+    data = request.data or {}
     username = (data.get('username') or '').strip()
     email = (data.get('email') or '').strip()
     password = data.get('password') or ''
     password2 = data.get('password2') or ''
 
     if not username or not password:
-        return cors_headers(JsonResponse({'error': 'Имя пользователя и пароль обязательны'}, status=400))
+        return Response({'error': 'Имя пользователя и пароль обязательны'}, status=status.HTTP_400_BAD_REQUEST)
     if password != password2:
-        return cors_headers(JsonResponse({'error': 'Пароли не совпадают'}, status=400))
+        return Response({'error': 'Пароли не совпадают'}, status=status.HTTP_400_BAD_REQUEST)
     if User.objects.filter(username=username).exists():
-        return cors_headers(JsonResponse({'error': 'Имя пользователя уже занято'}, status=400))
+        return Response({'error': 'Имя пользователя уже занято'}, status=status.HTTP_400_BAD_REQUEST)
 
     user = User.objects.create_user(username=username, email=email, password=password)
     get_user_preferences(user)
-    django_login(request, user)
-    return cors_headers(JsonResponse({'user': user_data(user)}))
+    tokens = token_pair_for_user(user)
+    return Response({'user': user_data(user), **tokens})
 
 
-@csrf_exempt
-@require_http_methods(['OPTIONS', 'POST'])
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def login_view(request):
-    if request.method == 'OPTIONS':
-        return preflight_response()
-
-    data = parse_json_body(request)
+    data = request.data or {}
     username = (data.get('username') or '').strip()
     password = data.get('password') or ''
 
     if not username or not password:
-        return cors_headers(JsonResponse({'error': 'Логин и пароль обязательны'}, status=400))
+        return Response({'error': 'Логин и пароль обязательны'}, status=status.HTTP_400_BAD_REQUEST)
 
     user = authenticate(request, username=username, password=password)
     if user is None:
-        return cors_headers(JsonResponse({'error': 'Неверные учетные данные'}, status=401))
+        return Response({'error': 'Неверные учетные данные'}, status=status.HTTP_401_UNAUTHORIZED)
 
     get_user_preferences(user)
-    django_login(request, user)
-    return cors_headers(JsonResponse({'user': user_data(user)}))
-
-
-@csrf_exempt
-@require_http_methods(['OPTIONS', 'POST'])
-def logout_view(request):
-    if request.method == 'OPTIONS':
-        return preflight_response()
-
-    django_logout(request)
-    return cors_headers(JsonResponse({'success': True}))
-
-
-@require_http_methods(['OPTIONS', 'GET'])
-def current_user(request):
-    if request.method == 'OPTIONS':
-        return preflight_response()
-
-    if not request.user.is_authenticated:
-        return cors_headers(JsonResponse({'authenticated': False}, status=401))
-
-    return cors_headers(JsonResponse({'user': user_data(request.user)}))
-
-
-@require_http_methods(['OPTIONS', 'GET'])
-def preferences(request):
-    if request.method == 'OPTIONS':
-        return preflight_response()
-
-    if not request.user.is_authenticated:
-        return cors_headers(JsonResponse({'error': 'Требуется авторизация'}, status=401))
-
-    preference = get_user_preferences(request.user)
-    return cors_headers(JsonResponse({'preferences': preference.counts}))
-
-
-@csrf_exempt
-@require_http_methods(['OPTIONS', 'POST'])
-def reset_preferences(request):
-    if request.method == 'OPTIONS':
-        return preflight_response()
-
-    if not request.user.is_authenticated:
-        return cors_headers(JsonResponse({'error': 'Требуется авторизация'}, status=401))
-
-    preference = get_user_preferences(request.user)
-    preference.reset()
-    return cors_headers(JsonResponse({'preferences': preference.counts}))
-    """Возвращает теги юзера. Участник 1 использует для ранжирования."""
-    user = request.user if request.user.is_authenticated else User.objects.get_or_create(username='guest')[0]
-    if not user:
-        return Response({})
-    pref, _ = UserPreference.objects.get_or_create(user=user)
-    return Response(pref.get_tags())
+    tokens = token_pair_for_user(user)
+    return Response({'user': user_data(user), **tokens})
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_view(request):
+    refresh_token = (request.data or {}).get('refresh')
+    if refresh_token:
+        try:
+            RefreshToken(refresh_token).blacklist()
+        except TokenError:
+            return Response({'error': 'Некорректный refresh токен'}, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response({'success': True})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def current_user(request):
+    return Response({'user': user_data(request.user)})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def preferences(request):
+    preference = get_user_preferences(request.user)
+    return Response({'preferences': preference.counts})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def reset_preferences(request):
-    """Сброс истории интересов."""
-    user = request.user if request.user.is_authenticated else User.objects.get_or_create(username='guest')[0]
-    if not user:
-        return Response({'error': 'Нет пользователя'})
-    pref, _ = UserPreference.objects.get_or_create(user=user)
-    pref.reset_tags()
-    pref.save()
-    return Response({'status': 'ok', 'message': 'История интересов очищена'})
->>>>>>> main
+    preference = get_user_preferences(request.user)
+    preference.reset()
+    return Response({'preferences': preference.counts})

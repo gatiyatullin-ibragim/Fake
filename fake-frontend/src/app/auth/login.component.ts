@@ -34,7 +34,7 @@ export class LoginComponent {
       next: () => this.router.navigate(['/']),
       error: (error) => {
         console.error(error);
-        this.serverError.set('Неверный логин или пароль');
+        this.serverError.set(error?.message || 'Неверный логин или пароль');
       }
     });
   }
