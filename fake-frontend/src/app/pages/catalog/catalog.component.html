@@ -4,6 +4,9 @@
   <div class="catalog-header">
     <p class="catalog-tagline">НОВАЯ КОЛЛЕКЦИЯ 2025</p>
     <h1 class="catalog-title">КАТАЛОГ ТОВАРОВ</h1>
+    @if (searchTerm) {
+      <p class="catalog-subtitle">Результаты поиска по запросу: "{{ searchTerm }}"</p>
+    }
     <p class="catalog-subtitle">
       Премиум качество по честной цене. Оригинал 100%
       <span class="asterisk">*</span>
@@ -47,14 +50,44 @@
 
   <!-- ── Сетка товаров ──────────────────────────────────────────── -->
   @if (!isLoading && !errorMessage) {
+    @if (recommendedProducts.length > 0) {
+      <section class="catalog-recommended-section">
+        <div class="catalog-recommended-header">
+          <h2>РЕКОМЕНДАЦИИ ДЛЯ ТЕБЯ</h2>
+          <span>Подборка перед основным списком</span>
+        </div>
+        <div class="catalog-recommended-grid">
+          @for (product of recommendedProducts; track product.id) {
+            <a class="catalog-recommended-card" [routerLink]="['/product', product.id]" (click)="onOpenProduct(product.id)">
+              <img [src]="product.image" [alt]="product.name" />
+              <div class="catalog-recommended-info">
+                <span class="catalog-recommended-brand">{{ product.brand }}</span>
+                <h3>{{ product.name }}</h3>
+                <p>{{ product.price | currency:'₸ ':'code':'1.0-0' }}</p>
+              </div>
+            </a>
+          }
+        </div>
+      </section>
+    }
+
     @if (products.length === 0) {
       <div class="state-container">
-        <p>В этой категории пока нет товаров.</p>
+        @if (searchTerm) {
+          <p>По запросу "{{ searchTerm }}" ничего не найдено.</p>
+        } @else {
+          <p>В этой категории пока нет товаров.</p>
+        }
       </div>
     } @else {
+      <div class="catalog-meta">
+        <span>Найдено товаров: {{ totalCount }}</span>
+        <span>Страница {{ currentPage }} из {{ totalPages }}</span>
+      </div>
+
       <div class="products-grid">
         @for (product of products; track product.id) {
-          <a class="product-card" [routerLink]="['/product', product.id]">
+          <a class="product-card" [routerLink]="['/product', product.id]" (click)="onOpenProduct(product.id)">
             <div class="product-image-wrap">
               <img [src]="product.image" [alt]="product.name" class="product-image" />
               @if (!product.inStock) {
@@ -68,8 +101,15 @@
               <div class="product-footer">
                 <span class="product-price">{{ product.price | currency:'₸ ':'code':'1.0-0' }}</span>
                 @if (product.inStock) {
-                  <button class="btn-cart" (click)="onAddToCart(product); $event.preventDefault()">
-                    В КОРЗИНУ
+                  <button
+                    class="btn-cart"
+                    [class.added]="addedProductId === product.id"
+                    (click)="onAddToCart($event, product)">
+                    @if (addedProductId === product.id) {
+                      ✓ Добавлено
+                    } @else {
+                      В КОРЗИНУ
+                    }
                   </button>
                 } @else {
                   <button class="btn-cart disabled" disabled (click)="$event.preventDefault()">
@@ -81,6 +121,26 @@
           </a>
         }
       </div>
+
+      @if (totalPages > 1) {
+        <div class="pagination-controls">
+          <button
+            class="pagination-btn"
+            [disabled]="currentPage <= 1"
+            (click)="onPageChange(currentPage - 1)">
+            ← Назад
+          </button>
+
+          <span class="pagination-info">{{ currentPage }} / {{ totalPages }}</span>
+
+          <button
+            class="pagination-btn"
+            [disabled]="currentPage >= totalPages"
+            (click)="onPageChange(currentPage + 1)">
+            Вперёд →
+          </button>
+        </div>
+      }
     }
   }
 

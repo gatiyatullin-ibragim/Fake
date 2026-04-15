@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { CartService } from '../../../core/services/cart-service';
 import { OrderService } from '../../../core/services/order-service';
+import { AuthService } from '../../../auth/auth.service';
 
 @Component({
   selector: 'app-cart',
@@ -14,6 +15,7 @@ import { OrderService } from '../../../core/services/order-service';
 export class CartComponent {
   cartService = inject(CartService);
   orderService = inject(OrderService);
+  authService = inject(AuthService);
   router = inject(Router);
 
   isOrdering = false;
@@ -23,6 +25,7 @@ export class CartComponent {
   items = this.cartService.items;
   total = this.cartService.total;
   count = this.cartService.count;
+  isLoggedIn = computed(() => !!this.authService.user());
 
   updateQuantity(product_id: number, size: string, quantity: number): void {
     this.cartService.updateQuantity(product_id, size, quantity);
@@ -34,6 +37,12 @@ export class CartComponent {
 
   checkout(): void {
     if (this.cartService.items().length === 0) return;
+    if (!this.isLoggedIn()) {
+      this.errorMessage = 'Для оформления заказа войдите в профиль.';
+      this.router.navigate(['/login']);
+      return;
+    }
+
     this.isOrdering = true;
     this.errorMessage = '';
 
@@ -44,8 +53,8 @@ export class CartComponent {
         this.isOrdering = false;
         setTimeout(() => this.router.navigate(['/orders']), 2000);
       },
-      error: () => {
-        this.errorMessage = 'Ошибка при оформлении заказа. Попробуйте снова.';
+      error: (error) => {
+        this.errorMessage = error?.message || 'Ошибка при оформлении заказа. Попробуйте снова.';
         this.isOrdering = false;
       },
     });

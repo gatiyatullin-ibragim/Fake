@@ -85,6 +85,27 @@
         }
       </div>
     </section>
+
+    @if (recommendedProducts.length > 0) {
+      <section class="recommended-section">
+        <div class="section-header">
+          <h2 class="section-title">РЕКОМЕНДАЦИИ ДЛЯ ТЕБЯ</h2>
+          <a routerLink="/catalog" class="section-link">Открыть каталог →</a>
+        </div>
+        <div class="recommended-grid">
+          @for (product of recommendedProducts; track product.id) {
+            <a class="recommended-card" [routerLink]="['/product', product.id]" (click)="onRecommendationClick(product.id)">
+              <img [src]="product.image" [alt]="product.name" />
+              <div class="recommended-info">
+                <span class="recommended-brand">{{ product.brand }}</span>
+                <h3>{{ product.name }}</h3>
+                <p>{{ product.price | currency:'₸ ':'code':'1.0-0' }}</p>
+              </div>
+            </a>
+          }
+        </div>
+      </section>
+    }
   
     <!-- ══════════════════════════════════════════════════════════════ -->
     <!-- PROMO STRIP                                                    -->

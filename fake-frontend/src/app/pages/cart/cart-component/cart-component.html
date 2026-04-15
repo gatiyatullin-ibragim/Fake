@@ -70,11 +70,16 @@
             <p class="error-msg">{{ errorMessage }}</p>
           }
 
+          @if (!isLoggedIn()) {
+            <p class="error-msg">Для оформления заказа сначала войдите в профиль и заполните адрес.</p>
+            <a routerLink="/login" class="btn-continue-small">Войти в профиль</a>
+          }
+
           <button
             class="btn-checkout"
-            [disabled]="isOrdering"
+            [disabled]="isOrdering || !isLoggedIn()"
             (click)="checkout()">
-            {{ isOrdering ? 'Оформляем...' : 'ОФОРМИТЬ ЗАКАЗ' }}
+            {{ !isLoggedIn() ? 'ТРЕБУЕТСЯ ВХОД' : (isOrdering ? 'Оформляем...' : 'ОФОРМИТЬ ЗАКАЗ') }}
           </button>
 
           <a routerLink="/catalog" class="btn-continue-small">← Продолжить покупки</a>

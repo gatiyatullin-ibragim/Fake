@@ -9,4 +9,5 @@ export interface Product {
   category: Category;
   inStock: boolean;
   brand: string;
+  tags?: string[];
 }

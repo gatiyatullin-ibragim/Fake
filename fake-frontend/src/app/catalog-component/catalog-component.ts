@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule, CurrencyPipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { ProductService } from '../core/services/product.service';
 import { CartService } from '../core/services/cart-service';
 import { Product } from '../models/product.model';
@@ -9,7 +8,7 @@ import { Category } from '../models/category.model';
 @Component({
   selector: 'app-catalog',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, RouterLink],
+  imports: [CommonModule],
   templateUrl: './catalog-component.html',
   styleUrl: './catalog-component.css',
 })
