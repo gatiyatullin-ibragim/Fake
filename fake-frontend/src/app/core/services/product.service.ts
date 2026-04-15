@@ -81,4 +81,16 @@ export class ProductService {
       .get<ProductApiModel[]>(`${this.apiUrl}/products/similar/${id}/`)
       .pipe(map((items) => items.map((item) => this.mapProduct(item))));
   }
+
+  getRecommendations(limit = 8, interests?: string): Observable<Product[]> {
+    const params = new URLSearchParams();
+    params.set('limit', String(limit));
+    if (interests?.trim()) {
+      params.set('interests', interests.trim());
+    }
+
+    return this.http
+      .get<ProductApiModel[]>(`${this.apiUrl}/products/recommendations/?${params.toString()}`)
+      .pipe(map((items) => items.map((item) => this.mapProduct(item))));
+  }
 }

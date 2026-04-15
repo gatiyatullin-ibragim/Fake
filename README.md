@@ -56,7 +56,10 @@ Auth header for protected endpoints:
 ### Products
 
 - `GET /api/products/`
+- `GET /api/products/?q=white`
 - `GET /api/products/?interests=running,football`
+- `GET /api/products/recommendations/?limit=12`
+- `GET /api/products/recommendations/?interests=running,street&limit=20`
 - `GET /api/products/<id>/`
 - `GET /api/products/similar/<id>/`
 
@@ -112,3 +115,17 @@ Auth header for protected endpoints:
     ]
   }
   ```
+
+## Seed 100+ Products
+
+From `Fakebackend` folder:
+
+```bash
+python manage.py seed_products --count 120
+```
+
+Optional reset before seeding:
+
+```bash
+python manage.py seed_products --count 120 --reset
+```

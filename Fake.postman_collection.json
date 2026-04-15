@@ -25,6 +25,14 @@
     {
       "key": "order_id",
       "value": "1"
+    },
+    {
+      "key": "search_query",
+      "value": "white"
+    },
+    {
+      "key": "interests",
+      "value": "running,street"
     }
   ],
   "item": [
@@ -125,6 +133,38 @@
                 "value": "Bearer {{access_token}}"
               }
             ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/user/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "user",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update User Profile (email + address)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"address\": \"Almaty, Abay ave 25\"\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/api/users/user/",
               "host": [
@@ -243,6 +283,29 @@
           }
         },
         {
+          "name": "Search Products (q)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/products/?q={{search_query}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "{{search_query}}"
+                }
+              ]
+            }
+          }
+        },
+        {
           "name": "Get Products By Interests",
           "request": {
             "method": "GET",
@@ -260,6 +323,40 @@
                 {
                   "key": "interests",
                   "value": "running,football"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Recommendations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/recommendations/?interests={{interests}}&limit=12",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "recommendations",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "interests",
+                  "value": "{{interests}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "12"
                 }
               ]
             }
@@ -403,6 +500,12 @@
           "name": "Get Orders",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/orders/",
               "host": [
@@ -420,6 +523,12 @@
           "name": "Get Order Detail",
           "request": {
             "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/orders/{{order_id}}/",
               "host": [
@@ -442,6 +551,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
               }
             ],
             "body": {

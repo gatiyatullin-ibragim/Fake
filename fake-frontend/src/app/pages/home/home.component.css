@@ -281,6 +281,61 @@
     max-width: 1400px;
     margin: 0 auto;
   }
+
+  .recommended-section {
+    padding: 0 64px 80px;
+  }
+
+  .recommended-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+  }
+
+  .recommended-card {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .recommended-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  .recommended-card img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    display: block;
+  }
+
+  .recommended-info {
+    padding: 14px;
+    display: grid;
+    gap: 6px;
+  }
+
+  .recommended-brand {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #888;
+  }
+
+  .recommended-info h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #111;
+  }
+
+  .recommended-info p {
+    margin: 0;
+    font-weight: 800;
+    color: #111;
+  }
   
   .section-header {
     display: flex;

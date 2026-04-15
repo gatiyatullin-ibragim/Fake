@@ -1,11 +1,13 @@
 from decimal import Decimal, InvalidOperation
+from collections import Counter
 
 from django.db import connection
 from django.shortcuts import get_object_or_404
+from django.utils.text import slugify
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import Product
+from .models import Category, Product
 from users.models import UserPreference
 
 
@@ -33,6 +35,60 @@ def score_by_preferences(product: Product, preference_scores: dict) -> int:
 	for tag in (product.tags or []):
 		score += int(preference_scores.get(tag, 0))
 	return score
+
+
+def build_interest_scores(request) -> dict:
+	scores = {}
+
+	if request.user and request.user.is_authenticated:
+		pref, _ = UserPreference.objects.get_or_create(user=request.user)
+		for tag, value in (pref.counts or {}).items():
+			scores[tag] = scores.get(tag, 0) + int(value)
+
+	interests_param = request.query_params.get('interests', '')
+	if interests_param:
+		for raw_tag in interests_param.split(','):
+			tag = raw_tag.strip()
+			if not tag:
+				continue
+			scores[tag] = scores.get(tag, 0) + 5
+
+	return scores
+
+
+def recommend_products(request, base_products: list[Product]) -> list[Product]:
+	if not base_products:
+		return []
+
+	interest_scores = build_interest_scores(request)
+
+	if interest_scores:
+		scored = sorted(
+			base_products,
+			key=lambda p: (
+				score_by_preferences(p, interest_scores),
+				int(p.in_stock),
+				p.id,
+			),
+			reverse=True,
+		)
+		return scored
+
+	tag_popularity = Counter(
+		tag
+		for product in base_products
+		for tag in (product.tags or [])
+	)
+
+	return sorted(
+		base_products,
+		key=lambda p: (
+			sum(tag_popularity.get(tag, 0) for tag in (p.tags or [])),
+			int(p.in_stock),
+			p.id,
+		),
+		reverse=True,
+	)
 
 
 def get_interest_scores(request) -> dict:
@@ -129,6 +185,20 @@ def get_products(request):
 
 
 @api_view(['GET'])
+def get_recommendations(request):
+	base_products = search_products(request.query_params.get('q', ''))
+	recommended = recommend_products(request, base_products)
+
+	limit_raw = request.query_params.get('limit', '12')
+	try:
+		limit = max(1, min(int(limit_raw), 50))
+	except ValueError:
+		limit = 12
+
+	return Response([serialize_product(p) for p in recommended[:limit]])
+
+
+@api_view(['GET'])
 def get_product_detail(request, pk: int):
 	product = get_object_or_404(Product, pk=pk)
 	return Response(serialize_product(product))
@@ -193,6 +263,14 @@ def create_product(request):
 
 	if not isinstance(tags, list):
 		return Response({'error': 'Поле tags должно быть массивом'}, status=400)
+
+	if category:
+		category_slug = slugify(category)
+		Category.objects.get_or_create(
+			slug=category_slug,
+			defaults={'name': category.replace('-', ' ').title()},
+		)
+		category = category_slug
 
 	normalized_tags = [str(tag).strip() for tag in tags if str(tag).strip()]
 
