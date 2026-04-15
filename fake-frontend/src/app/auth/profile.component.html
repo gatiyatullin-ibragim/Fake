@@ -12,6 +12,18 @@
         <span>{{ user()?.email || 'Не указан' }}</span>
       </div>
 
+      <div class="profile-edit-block">
+        <label class="field-label" for="profile-email">E-mail для связи</label>
+        <input id="profile-email" type="email" [(ngModel)]="email" placeholder="example@mail.com" />
+
+        <label class="field-label" for="profile-address">Адрес</label>
+        <textarea id="profile-address" rows="3" [(ngModel)]="address" placeholder="Введите адрес доставки"></textarea>
+
+        <button type="button" (click)="saveProfile()" [disabled]="savingProfile()">
+          {{ savingProfile() ? 'Сохраняем...' : 'Сохранить профиль' }}
+        </button>
+      </div>
+
       <div class="preferences-block">
         <h2>История интересов</h2>
 

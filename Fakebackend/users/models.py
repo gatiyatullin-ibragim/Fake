@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 class UserPreference(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='preference')
     counts = models.JSONField(default=dict)
+    address = models.CharField(max_length=255, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):

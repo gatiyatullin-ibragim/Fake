@@ -4,6 +4,9 @@
   <div class="catalog-header">
     <p class="catalog-tagline">НОВАЯ КОЛЛЕКЦИЯ 2025</p>
     <h1 class="catalog-title">КАТАЛОГ ТОВАРОВ</h1>
+    @if (searchTerm) {
+      <p class="catalog-subtitle">Результаты поиска по запросу: "{{ searchTerm }}"</p>
+    }
     <p class="catalog-subtitle">
       Премиум качество по честной цене. Оригинал 100%
       <span class="asterisk">*</span>
@@ -49,7 +52,11 @@
   @if (!isLoading && !errorMessage) {
     @if (products.length === 0) {
       <div class="state-container">
-        <p>В этой категории пока нет товаров.</p>
+        @if (searchTerm) {
+          <p>По запросу "{{ searchTerm }}" ничего не найдено.</p>
+        } @else {
+          <p>В этой категории пока нет товаров.</p>
+        }
       </div>
     } @else {
       <div class="products-grid">

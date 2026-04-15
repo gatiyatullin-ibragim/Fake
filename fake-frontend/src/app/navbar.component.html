@@ -11,6 +11,16 @@
     <a routerLink="/orders" *ngIf="isLoggedIn()">Заказы</a>
   </div>
 
+  <form class="navbar__search" (ngSubmit)="submitSearch()">
+    <input
+      type="search"
+      name="searchQuery"
+      [(ngModel)]="searchQuery"
+      placeholder="Поиск товаров"
+      aria-label="Поиск товаров" />
+    <button type="submit">Найти</button>
+  </form>
+
   <div class="navbar__actions">
     <ng-container *ngIf="isLoggedIn(); else authLinks">
       <span class="navbar__user">{{ user()?.username }}</span>

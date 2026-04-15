@@ -10,10 +10,12 @@ from .models import UserPreference
 
 
 def user_data(user: User) -> dict:
+    preference = get_user_preferences(user)
     return {
         'id': user.id,
         'username': user.username,
-        'email': user.email or ''
+        'email': user.email or '',
+        'address': preference.address or '',
     }
 
 
@@ -36,6 +38,7 @@ def register(request):
     data = request.data or {}
     username = (data.get('username') or '').strip()
     email = (data.get('email') or '').strip()
+    address = (data.get('address') or '').strip()
     password = data.get('password') or ''
     password2 = data.get('password2') or ''
 
@@ -47,7 +50,9 @@ def register(request):
         return Response({'error': 'Имя пользователя уже занято'}, status=status.HTTP_400_BAD_REQUEST)
 
     user = User.objects.create_user(username=username, email=email, password=password)
-    get_user_preferences(user)
+    preference = get_user_preferences(user)
+    preference.address = address
+    preference.save(update_fields=['address', 'updated_at'])
     tokens = token_pair_for_user(user)
     return Response({'user': user_data(user), **tokens})
 
@@ -84,9 +89,19 @@ def logout_view(request):
     return Response({'success': True})
 
 
-@api_view(['GET'])
+@api_view(['GET', 'PUT', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def current_user(request):
+    if request.method in ['PUT', 'PATCH']:
+        data = request.data or {}
+        request.user.email = (data.get('email') or request.user.email or '').strip()
+        request.user.save(update_fields=['email'])
+
+        preference = get_user_preferences(request.user)
+        if 'address' in data:
+            preference.address = (data.get('address') or '').strip()
+            preference.save(update_fields=['address', 'updated_at'])
+
     return Response({'user': user_data(request.user)})
 
 

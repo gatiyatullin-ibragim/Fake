@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ProductService } from '../../core/services/product.service';
 import { CartService } from '../../core/services/cart-service';
 import { Product } from '../../models/product.model';
@@ -18,27 +18,36 @@ export class CatalogComponent implements OnInit {
   products: Product[] = [];
   categories: Category[] = [];
   selectedCategory: string | null = null;
+  searchTerm = '';
   isLoading = true;
   errorMessage = '';
   addedProductId: number | null = null;
 
   constructor(
+    private route: ActivatedRoute,
+    private router: Router,
     private productService: ProductService,
     private cartService: CartService,
   ) {}
 
   ngOnInit(): void {
-    this.loadCatalogData();
+    this.route.queryParamMap.subscribe((params) => {
+      this.searchTerm = (params.get('q') || '').trim();
+      this.selectedCategory = (params.get('category') || '').trim() || null;
+      this.loadCatalogData(this.searchTerm, this.selectedCategory);
+    });
   }
 
-  loadCatalogData(): void {
+  loadCatalogData(searchTerm = '', categorySlug: string | null = null): void {
     this.isLoading = true;
     this.errorMessage = '';
-    this.productService.getProducts().subscribe({
+    this.productService.getProducts(undefined, searchTerm).subscribe({
       next: (data) => {
         this.allProducts = data;
-        this.products = data;
         this.buildCategories(data);
+        this.products = categorySlug
+          ? data.filter((product) => product.category.slug === categorySlug)
+          : data;
         this.isLoading = false;
       },
       error: () => {
@@ -63,12 +72,17 @@ export class CatalogComponent implements OnInit {
   }
 
   onCategoryClick(slug: string | null): void {
-    this.selectedCategory = slug;
     if (!slug) {
-      this.products = this.allProducts;
+      this.router.navigate(['/catalog']);
       return;
     }
-    this.products = this.allProducts.filter((p) => p.category.slug === slug);
+
+    this.router.navigate(['/catalog'], {
+      queryParams: {
+        ...(this.searchTerm ? { q: this.searchTerm } : {}),
+        category: slug,
+      },
+    });
   }
 
   onAddToCart(event: Event, product: Product): void {

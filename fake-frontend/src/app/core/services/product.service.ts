@@ -58,8 +58,13 @@ export class ProductService {
     );
   }
 
-  getProducts(categorySlug?: string): Observable<Product[]> {
-    return this.http.get<ProductApiModel[]>(`${this.apiUrl}/products/`).pipe(
+  getProducts(categorySlug?: string, searchQuery?: string): Observable<Product[]> {
+    const query = (searchQuery || '').trim();
+    const url = query
+      ? `${this.apiUrl}/products/?q=${encodeURIComponent(query)}`
+      : `${this.apiUrl}/products/`;
+
+    return this.http.get<ProductApiModel[]>(url).pipe(
       map((items) => items.map((item) => this.mapProduct(item))),
       map((items) => categorySlug ? items.filter((p) => p.category.slug === categorySlug) : items)
     );

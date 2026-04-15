@@ -6,6 +6,7 @@ export interface User {
   id: number;
   username: string;
   email: string;
+  address: string;
 }
 
 export interface Preferences {
@@ -129,6 +130,13 @@ export class AuthService {
 
   getPreferences(): Observable<{ preferences: Preferences }> {
     return this.http.get<{ preferences: Preferences }>(`${this.apiUrl}/preferences/`).pipe(
+      catchError((error) => throwError(() => new Error(this.normalizeError(error))))
+    );
+  }
+
+  updateProfile(profile: { email: string; address: string }): Observable<{ user: User }> {
+    return this.http.put<{ user: User }>(`${this.apiUrl}/user/`, profile).pipe(
+      tap((response) => this.user.set(response.user)),
       catchError((error) => throwError(() => new Error(this.normalizeError(error))))
     );
   }

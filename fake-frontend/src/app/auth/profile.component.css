@@ -45,6 +45,32 @@
   gap: 12px;
 }
 
+.profile-edit-block {
+  display: grid;
+  gap: 10px;
+}
+
+.field-label {
+  font-weight: 700;
+  color: #111;
+}
+
+input,
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d9d9d9;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font: inherit;
+  background: #fff;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 88px;
+}
+
 .preferences-block h2 {
   margin: 0;
   font-size: 1.1rem;

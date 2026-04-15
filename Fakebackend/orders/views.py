@@ -1,7 +1,7 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.auth.models import User
 from decimal import Decimal
 from .models import Order, OrderItem
 from products.models import Product
@@ -33,22 +33,10 @@ def serialize_order(order, detailed=False):
         data['items'] = [serialize_order_item(i) for i in order.items.all()]
     return data
 
-
-
-def get_current_user(request):
-    if request.user.is_authenticated:
-        return request.user
-    user, _ = User.objects.get_or_create(username='guest')
-    return user
-
-
-
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_order(request):
-    
-    user = get_current_user(request)
-    if not user:
-        return Response({'error': 'Нет пользователя'}, status=status.HTTP_400_BAD_REQUEST)
+    user = request.user
 
     items_data = request.data.get('items', [])
     if not items_data:
@@ -100,21 +88,19 @@ def create_order(request):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_orders(request):
-    user = get_current_user(request)
-    if not user:
-        return Response([])
-
+    user = request.user
     orders = Order.objects.filter(user=user)
     return Response([serialize_order(o) for o in orders])
 
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_order_detail(request, pk):
-    user = get_current_user(request)
     try:
-        order = Order.objects.get(pk=pk, user=user)
+        order = Order.objects.get(pk=pk, user=request.user)
         return Response(serialize_order(order, detailed=True))
     except Order.DoesNotExist:
         return Response({'error': 'Заказ не найден'}, status=status.HTTP_404_NOT_FOUND)

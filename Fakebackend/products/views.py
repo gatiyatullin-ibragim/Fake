@@ -1,5 +1,6 @@
 from decimal import Decimal, InvalidOperation
 
+from django.db import connection
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -46,9 +47,81 @@ def get_interest_scores(request) -> dict:
 	return {}
 
 
+def search_products(query: str) -> list[Product]:
+	query = (query or '').strip()
+	if not query:
+		return list(Product.objects.all())
+
+	query_terms = [token.lower() for token in query.split() if token]
+	fts_query = ' '.join(f'{token}*' for token in query.split() if token)
+	if not fts_query:
+		return list(Product.objects.all())
+
+	products = list(
+		Product.objects.values('id', 'name', 'description', 'brand', 'category', 'tags')
+	)
+
+	with connection.cursor() as cursor:
+		cursor.execute(
+			'''
+			CREATE VIRTUAL TABLE IF NOT EXISTS product_search
+			USING fts5(product_id UNINDEXED, name, description, brand, category, tags)
+			'''
+		)
+		cursor.execute('DELETE FROM product_search')
+		cursor.executemany(
+			'''
+			INSERT INTO product_search(product_id, name, description, brand, category, tags)
+			VALUES (%s, %s, %s, %s, %s, %s)
+			''',
+			[
+				(
+					product['id'],
+					product['name'],
+					product['description'],
+					product['brand'],
+					product['category'],
+					' '.join(product['tags'] or []),
+				)
+				for product in products
+			],
+		)
+		cursor.execute(
+			'''
+			SELECT product_id
+			FROM product_search
+			WHERE product_search MATCH %s
+			ORDER BY bm25(product_search)
+			''',
+			[fts_query],
+		)
+		matched_ids = [row[0] for row in cursor.fetchall()]
+
+	if not matched_ids:
+		return []
+
+	products_by_id = Product.objects.in_bulk(matched_ids)
+	matched_products = [products_by_id[product_id] for product_id in matched_ids if product_id in products_by_id]
+
+	return [
+		product
+		for product in matched_products
+		if all(
+			term in ' '.join([
+				product.name,
+				product.description,
+				product.brand,
+				product.category,
+				' '.join(product.tags or []),
+			]).lower()
+			for term in query_terms
+		)
+	]
+
+
 @api_view(['GET'])
 def get_products(request):
-	products = list(Product.objects.all())
+	products = search_products(request.query_params.get('q', ''))
 	interest_scores = get_interest_scores(request)
 
 	products.sort(key=lambda p: score_by_preferences(p, interest_scores), reverse=True)
