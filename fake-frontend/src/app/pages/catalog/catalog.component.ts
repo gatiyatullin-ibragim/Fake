@@ -24,6 +24,10 @@ export class CatalogComponent implements OnInit {
   isLoading = true;
   errorMessage = '';
   addedProductId: number | null = null;
+  currentPage = 1;
+  pageSize = 24;
+  totalCount = 0;
+  totalPages = 1;
 
   constructor(
     private route: ActivatedRoute,
@@ -34,24 +38,35 @@ export class CatalogComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.buildCategories();
     this.route.queryParamMap.subscribe((params) => {
       this.searchTerm = (params.get('q') || '').trim();
       this.selectedCategory = (params.get('category') || '').trim() || null;
-      this.loadCatalogData(this.searchTerm, this.selectedCategory);
+      const rawPage = Number(params.get('page') || '1');
+      const rawPageSize = Number(params.get('page_size') || String(this.pageSize));
+      this.currentPage = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
+      this.pageSize = Number.isFinite(rawPageSize) && rawPageSize > 0
+        ? Math.min(rawPageSize, 48)
+        : 24;
+      this.loadCatalogData(this.searchTerm, this.selectedCategory, this.currentPage);
     });
   }
 
-  loadCatalogData(searchTerm = '', categorySlug: string | null = null): void {
+  loadCatalogData(searchTerm = '', categorySlug: string | null = null, page = 1): void {
     this.isLoading = true;
     this.errorMessage = '';
     this.loadRecommendations(categorySlug);
-    this.productService.getProducts(undefined, searchTerm).subscribe({
-      next: (data) => {
-        this.allProducts = data;
-        this.buildCategories(data);
-        this.products = categorySlug
-          ? data.filter((product) => product.category.slug === categorySlug)
-          : data;
+    this.productService.getProductsPage({
+      categorySlug,
+      searchQuery: searchTerm,
+      page,
+      pageSize: this.pageSize,
+    }).subscribe({
+      next: (response) => {
+        this.products = response.results;
+        this.currentPage = response.page;
+        this.totalCount = response.count;
+        this.totalPages = Math.max(1, Math.ceil(response.count / response.pageSize));
         this.isLoading = false;
       },
       error: () => {
@@ -62,7 +77,7 @@ export class CatalogComponent implements OnInit {
   }
 
   loadRecommendations(categorySlug: string | null = null): void {
-    this.productService.getRecommendations(8).subscribe({
+    this.productService.getRecommendations(3).subscribe({
       next: (data) => {
         this.recommendedProducts = categorySlug
           ? data.filter((product) => product.category.slug === categorySlug)
@@ -74,23 +89,26 @@ export class CatalogComponent implements OnInit {
     });
   }
 
-  buildCategories(products: Product[]): void {
-    const map = new Map<string, Category>();
-    for (const product of products) {
-      if (!map.has(product.category.slug)) {
-        map.set(product.category.slug, {
-          id: map.size + 1,
-          name: product.category.name,
-          slug: product.category.slug,
-        });
-      }
-    }
-    this.categories = Array.from(map.values());
+  buildCategories(): void {
+    this.productService.getCategories().subscribe({
+      next: (categories) => {
+        this.categories = categories;
+      },
+      error: () => {
+        this.categories = [];
+      },
+    });
   }
 
   onCategoryClick(slug: string | null): void {
     if (!slug) {
-      this.router.navigate(['/catalog']);
+      this.router.navigate(['/catalog'], {
+        queryParams: {
+          ...(this.searchTerm ? { q: this.searchTerm } : {}),
+          page: 1,
+          page_size: this.pageSize,
+        },
+      });
       return;
     }
 
@@ -98,6 +116,23 @@ export class CatalogComponent implements OnInit {
       queryParams: {
         ...(this.searchTerm ? { q: this.searchTerm } : {}),
         category: slug,
+        page: 1,
+        page_size: this.pageSize,
+      },
+    });
+  }
+
+  onPageChange(nextPage: number): void {
+    if (nextPage < 1 || nextPage > this.totalPages || nextPage === this.currentPage) {
+      return;
+    }
+
+    this.router.navigate(['/catalog'], {
+      queryParams: {
+        ...(this.searchTerm ? { q: this.searchTerm } : {}),
+        ...(this.selectedCategory ? { category: this.selectedCategory } : {}),
+        page: nextPage,
+        page_size: this.pageSize,
       },
     });
   }

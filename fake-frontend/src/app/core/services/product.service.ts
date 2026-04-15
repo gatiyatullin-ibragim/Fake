@@ -16,6 +16,24 @@ interface ProductApiModel {
   tags?: string[];
 }
 
+interface PaginatedProductApiResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  page: number;
+  page_size: number;
+  results: ProductApiModel[];
+}
+
+export interface PaginatedProductsResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  page: number;
+  pageSize: number;
+  results: Product[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -41,32 +59,54 @@ export class ProductService {
   }
 
   getCategories(): Observable<Category[]> {
-    return this.getProducts().pipe(
-      map((products) => {
-        const unique = new Map<string, Category>();
-        for (const p of products) {
-          if (!unique.has(p.category.slug)) {
-            unique.set(p.category.slug, {
-              id: unique.size + 1,
-              name: p.category.name,
-              slug: p.category.slug,
-            });
-          }
-        }
-        return Array.from(unique.values());
-      })
-    );
+    return this.http.get<Category[]>(`${this.apiUrl}/products/categories/`);
+  }
+
+  getProductsPage(options?: {
+    categorySlug?: string | null;
+    searchQuery?: string;
+    page?: number;
+    pageSize?: number;
+  }): Observable<PaginatedProductsResponse> {
+    const categorySlug = options?.categorySlug || '';
+    const searchQuery = options?.searchQuery || '';
+    const page = options?.page || 1;
+    const pageSize = options?.pageSize || 24;
+
+    const query = (searchQuery || '').trim();
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    params.set('page_size', String(pageSize));
+
+    if (query) {
+      params.set('q', query);
+    }
+    if (categorySlug.trim()) {
+      params.set('category', categorySlug.trim());
+    }
+
+    return this.http
+      .get<PaginatedProductApiResponse>(`${this.apiUrl}/products/?${params.toString()}`)
+      .pipe(
+        map((response) => ({
+          count: response.count,
+          next: response.next,
+          previous: response.previous,
+          page: response.page,
+          pageSize: response.page_size,
+          results: response.results.map((item) => this.mapProduct(item)),
+        }))
+      );
   }
 
   getProducts(categorySlug?: string, searchQuery?: string): Observable<Product[]> {
-    const query = (searchQuery || '').trim();
-    const url = query
-      ? `${this.apiUrl}/products/?q=${encodeURIComponent(query)}`
-      : `${this.apiUrl}/products/`;
-
-    return this.http.get<ProductApiModel[]>(url).pipe(
-      map((items) => items.map((item) => this.mapProduct(item))),
-      map((items) => categorySlug ? items.filter((p) => p.category.slug === categorySlug) : items)
+    return this.getProductsPage({
+      categorySlug,
+      searchQuery,
+      page: 1,
+      pageSize: 200,
+    }).pipe(
+      map((response) => response.results)
     );
   }
 
@@ -82,7 +122,7 @@ export class ProductService {
       .pipe(map((items) => items.map((item) => this.mapProduct(item))));
   }
 
-  getRecommendations(limit = 8, interests?: string): Observable<Product[]> {
+  getRecommendations(limit = 3, interests?: string): Observable<Product[]> {
     const params = new URLSearchParams();
     params.set('limit', String(limit));
     if (interests?.trim()) {

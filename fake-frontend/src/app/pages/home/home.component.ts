@@ -28,7 +28,7 @@ export class HomeComponent {
   recommendedProducts: Product[] = [];
 
   constructor() {
-    this.productService.getRecommendations(8).subscribe({
+    this.productService.getRecommendations(3).subscribe({
       next: (products) => {
         this.recommendedProducts = products;
       },

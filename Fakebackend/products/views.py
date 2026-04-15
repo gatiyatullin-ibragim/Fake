@@ -1,5 +1,6 @@
 from decimal import Decimal, InvalidOperation
 from collections import Counter
+from urllib.parse import urlencode
 
 from django.db import connection
 from django.shortcuts import get_object_or_404
@@ -175,13 +176,71 @@ def search_products(query: str) -> list[Product]:
 	]
 
 
+def parse_positive_int(raw_value, default_value: int) -> int:
+	try:
+		value = int(raw_value)
+	except (TypeError, ValueError):
+		return default_value
+	return value if value > 0 else default_value
+
+
+def build_paginated_response(request, products: list[Product], default_page_size: int = 24, max_page_size: int = 48) -> dict:
+	page = parse_positive_int(request.query_params.get('page', 1), 1)
+	page_size = parse_positive_int(request.query_params.get('page_size', default_page_size), default_page_size)
+	page_size = min(page_size, max_page_size)
+
+	total = len(products)
+	start = (page - 1) * page_size
+	end = start + page_size
+
+	if start >= total and total > 0:
+		page = max(1, ((total - 1) // page_size) + 1)
+		start = (page - 1) * page_size
+		end = start + page_size
+
+	results = [serialize_product(p) for p in products[start:end]]
+
+	base_url = request.build_absolute_uri(request.path)
+	params = request.query_params.copy()
+
+	def build_page_url(target_page: int):
+		params['page'] = str(target_page)
+		params['page_size'] = str(page_size)
+		return f"{base_url}?{urlencode(params, doseq=True)}"
+
+	next_url = build_page_url(page + 1) if end < total else None
+	previous_url = build_page_url(page - 1) if page > 1 else None
+
+	return {
+		'count': total,
+		'next': next_url,
+		'previous': previous_url,
+		'page': page,
+		'page_size': page_size,
+		'results': results,
+	}
+
+
+@api_view(['GET'])
+def get_categories(request):
+	categories = Category.objects.all().order_by('name')
+	return Response([
+		{'id': category.id, 'name': category.name, 'slug': category.slug}
+		for category in categories
+	])
+
+
 @api_view(['GET'])
 def get_products(request):
 	products = search_products(request.query_params.get('q', ''))
+	category_slug = (request.query_params.get('category', '') or '').strip().lower()
+	if category_slug:
+		products = [p for p in products if (p.category or '').lower() == category_slug]
+
 	interest_scores = get_interest_scores(request)
 
 	products.sort(key=lambda p: score_by_preferences(p, interest_scores), reverse=True)
-	return Response([serialize_product(p) for p in products])
+	return Response(build_paginated_response(request, products))
 
 
 @api_view(['GET'])

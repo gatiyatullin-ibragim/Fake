@@ -80,6 +80,11 @@
         }
       </div>
     } @else {
+      <div class="catalog-meta">
+        <span>Найдено товаров: {{ totalCount }}</span>
+        <span>Страница {{ currentPage }} из {{ totalPages }}</span>
+      </div>
+
       <div class="products-grid">
         @for (product of products; track product.id) {
           <a class="product-card" [routerLink]="['/product', product.id]" (click)="onOpenProduct(product.id)">
@@ -116,6 +121,26 @@
           </a>
         }
       </div>
+
+      @if (totalPages > 1) {
+        <div class="pagination-controls">
+          <button
+            class="pagination-btn"
+            [disabled]="currentPage <= 1"
+            (click)="onPageChange(currentPage - 1)">
+            ← Назад
+          </button>
+
+          <span class="pagination-info">{{ currentPage }} / {{ totalPages }}</span>
+
+          <button
+            class="pagination-btn"
+            [disabled]="currentPage >= totalPages"
+            (click)="onPageChange(currentPage + 1)">
+            Вперёд →
+          </button>
+        </div>
+      }
     }
   }
 

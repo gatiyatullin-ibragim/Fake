@@ -55,9 +55,12 @@ Auth header for protected endpoints:
 
 ### Products
 
-- `GET /api/products/`
+- `GET /api/products/` (paginated)
+- `GET /api/products/?page=2&page_size=24`
+- `GET /api/products/?category=t-shirts&page=1&page_size=12`
 - `GET /api/products/?q=white`
 - `GET /api/products/?interests=running,football`
+- `GET /api/products/categories/`
 - `GET /api/products/recommendations/?limit=12`
 - `GET /api/products/recommendations/?interests=running,street&limit=20`
 - `GET /api/products/<id>/`
