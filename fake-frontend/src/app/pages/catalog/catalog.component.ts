@@ -3,6 +3,7 @@ import { CommonModule, CurrencyPipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ProductService } from '../../core/services/product.service';
 import { CartService } from '../../core/services/cart-service';
+import { TrackingService } from '../../core/services/tracking-service';
 import { Product } from '../../models/product.model';
 import { Category } from '../../models/category.model';
 
@@ -16,6 +17,7 @@ import { Category } from '../../models/category.model';
 export class CatalogComponent implements OnInit {
   allProducts: Product[] = [];
   products: Product[] = [];
+  recommendedProducts: Product[] = [];
   categories: Category[] = [];
   selectedCategory: string | null = null;
   searchTerm = '';
@@ -28,6 +30,7 @@ export class CatalogComponent implements OnInit {
     private router: Router,
     private productService: ProductService,
     private cartService: CartService,
+    private trackingService: TrackingService,
   ) {}
 
   ngOnInit(): void {
@@ -41,6 +44,7 @@ export class CatalogComponent implements OnInit {
   loadCatalogData(searchTerm = '', categorySlug: string | null = null): void {
     this.isLoading = true;
     this.errorMessage = '';
+    this.loadRecommendations(categorySlug);
     this.productService.getProducts(undefined, searchTerm).subscribe({
       next: (data) => {
         this.allProducts = data;
@@ -53,6 +57,19 @@ export class CatalogComponent implements OnInit {
       error: () => {
         this.errorMessage = 'Не удалось загрузить товары. Попробуйте позже.';
         this.isLoading = false;
+      },
+    });
+  }
+
+  loadRecommendations(categorySlug: string | null = null): void {
+    this.productService.getRecommendations(8).subscribe({
+      next: (data) => {
+        this.recommendedProducts = categorySlug
+          ? data.filter((product) => product.category.slug === categorySlug)
+          : data;
+      },
+      error: () => {
+        this.recommendedProducts = [];
       },
     });
   }
@@ -100,7 +117,13 @@ export class CatalogComponent implements OnInit {
       size: 'M',
     });
 
+    this.trackingService.trackClick(product.id);
+
     this.addedProductId = product.id;
     setTimeout(() => (this.addedProductId = null), 1500);
+  }
+
+  onOpenProduct(productId: number): void {
+    this.trackingService.trackClick(productId);
   }
 }

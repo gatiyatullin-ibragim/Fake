@@ -50,6 +50,27 @@
 
   <!-- ── Сетка товаров ──────────────────────────────────────────── -->
   @if (!isLoading && !errorMessage) {
+    @if (recommendedProducts.length > 0) {
+      <section class="catalog-recommended-section">
+        <div class="catalog-recommended-header">
+          <h2>РЕКОМЕНДАЦИИ ДЛЯ ТЕБЯ</h2>
+          <span>Подборка перед основным списком</span>
+        </div>
+        <div class="catalog-recommended-grid">
+          @for (product of recommendedProducts; track product.id) {
+            <a class="catalog-recommended-card" [routerLink]="['/product', product.id]" (click)="onOpenProduct(product.id)">
+              <img [src]="product.image" [alt]="product.name" />
+              <div class="catalog-recommended-info">
+                <span class="catalog-recommended-brand">{{ product.brand }}</span>
+                <h3>{{ product.name }}</h3>
+                <p>{{ product.price | currency:'₸ ':'code':'1.0-0' }}</p>
+              </div>
+            </a>
+          }
+        </div>
+      </section>
+    }
+
     @if (products.length === 0) {
       <div class="state-container">
         @if (searchTerm) {
@@ -61,7 +82,7 @@
     } @else {
       <div class="products-grid">
         @for (product of products; track product.id) {
-          <a class="product-card" [routerLink]="['/product', product.id]">
+          <a class="product-card" [routerLink]="['/product', product.id]" (click)="onOpenProduct(product.id)">
             <div class="product-image-wrap">
               <img [src]="product.image" [alt]="product.name" class="product-image" />
               @if (!product.inStock) {

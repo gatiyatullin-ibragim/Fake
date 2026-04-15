@@ -18,4 +18,5 @@ export const routes: Routes = [
   { path: 'profile',     component: ProfileComponent       },
   { path: 'cart',        component: CartComponent          },
   { path: 'orders',      component: OrdersComponent        },
+  { path: '**',          redirectTo: ''                    },
 ];
