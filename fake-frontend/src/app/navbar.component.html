@@ -6,7 +6,9 @@
   <div class="navbar__links">
     <a routerLink="/">Главная</a>
     <a routerLink="/catalog">Каталог</a>
+    <a routerLink="/cart">Корзина</a>
     <a routerLink="/profile" *ngIf="isLoggedIn()">Профиль</a>
+    <a routerLink="/orders" *ngIf="isLoggedIn()">Заказы</a>
   </div>
 
   <div class="navbar__actions">

@@ -68,8 +68,15 @@
               <div class="product-footer">
                 <span class="product-price">{{ product.price | currency:'₸ ':'code':'1.0-0' }}</span>
                 @if (product.inStock) {
-                  <button class="btn-cart" (click)="onAddToCart(product); $event.preventDefault()">
-                    В КОРЗИНУ
+                  <button
+                    class="btn-cart"
+                    [class.added]="addedProductId === product.id"
+                    (click)="onAddToCart($event, product)">
+                    @if (addedProductId === product.id) {
+                      ✓ Добавлено
+                    } @else {
+                      В КОРЗИНУ
+                    }
                   </button>
                 } @else {
                   <button class="btn-cart disabled" disabled (click)="$event.preventDefault()">

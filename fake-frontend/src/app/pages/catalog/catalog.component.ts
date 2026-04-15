@@ -71,7 +71,10 @@ export class CatalogComponent implements OnInit {
     this.products = this.allProducts.filter((p) => p.category.slug === slug);
   }
 
-  onAddToCart(product: Product): void {
+  onAddToCart(event: Event, product: Product): void {
+    event.preventDefault();
+    event.stopPropagation();
+
     if (!product.inStock) return;
 
     this.cartService.addItem({
