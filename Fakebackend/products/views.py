@@ -10,6 +10,7 @@ from rest_framework.response import Response
 
 from .models import Category, Product
 from users.models import UserPreference
+from .services.product_service import generate_and_save_image
 
 
 def serialize_product(p: Product) -> dict:
@@ -345,3 +346,22 @@ def create_product(request):
 	)
 
 	return Response(serialize_product(product), status=201)
+
+
+@api_view(["POST"])
+def generate_product_image_view(request, product_id):
+    try:
+        product = Product.objects.get(id=product_id)
+
+        image_url = generate_and_save_image(product)
+
+        return Response({
+            "status": "success",
+            "image_url": image_url
+        })
+
+    except Product.DoesNotExist:
+        return Response({"error": "Product not found"}, status=404)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)

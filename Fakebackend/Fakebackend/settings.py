@@ -12,8 +12,25 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def _load_env_file(env_path: Path) -> None:
+    if not env_path.exists():
+        return
+
+    for raw_line in env_path.read_text().splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith('#') or '=' not in line:
+            continue
+
+        key, value = line.split('=', 1)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'") )
+
+
+_load_env_file(BASE_DIR.parent / '.env')
 
 SECRET_KEY = 'django-insecure-rfc40r_ze)i_x=834$6p8ldsr_2iiltm)s_*5%@852bz(q3pj*'
 
@@ -108,3 +125,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LEONARDO_API_KEY = os.environ.get('LEONARDO_API_KEY') or os.environ.get('api_key', '')
+LEONARDO_MODEL_ID = os.environ.get('LEONARDO_MODEL_ID', 'b24e16ff-06e3-43eb-8d33-4416c2d75876')
+BACKEND_BASE_URL = os.environ.get('BACKEND_BASE_URL', 'http://localhost:8000')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
