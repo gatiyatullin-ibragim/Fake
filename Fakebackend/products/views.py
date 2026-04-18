@@ -2,6 +2,7 @@ from decimal import Decimal, InvalidOperation
 from collections import Counter
 from urllib.parse import urlencode
 
+from django.conf import settings
 from django.db import connection
 from django.shortcuts import get_object_or_404
 from django.utils.text import slugify
@@ -13,6 +14,19 @@ from users.models import UserPreference
 from .services.product_service import generate_and_save_image
 
 
+def build_generated_images(product: Product) -> list[str]:
+	backend_base = settings.BACKEND_BASE_URL
+
+	urls = []
+	for item in product.images.order_by('-created_at'):
+		url = item.image_url.url
+		if url.startswith('http://') or url.startswith('https://'):
+			urls.append(url)
+		else:
+			urls.append(f"{backend_base.rstrip('/')}{url}")
+	return urls
+
+
 def serialize_product(p: Product) -> dict:
 	return {
 		'id': p.id,
@@ -20,6 +34,7 @@ def serialize_product(p: Product) -> dict:
 		'description': p.description,
 		'price': str(p.price),
 		'image': p.image,
+		'generated_images': build_generated_images(p),
 		'category': {
 			'name': p.category,
 			'slug': p.category.lower().replace(' ', '-'),

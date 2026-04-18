@@ -10,6 +10,7 @@ interface ProductApiModel {
   description: string;
   price: string | number;
   image: string;
+  generated_images?: string[];
   category?: { name: string; slug: string };
   in_stock: boolean;
   brand: string;
@@ -49,6 +50,7 @@ export class ProductService {
       description: apiProduct.description,
       price: Number(apiProduct.price),
       image: apiProduct.image,
+      generatedImages: apiProduct.generated_images || [],
       category: apiProduct.category
         ? { id: 0, name: apiProduct.category.name, slug: apiProduct.category.slug }
         : { id: 0, name: 'Прочее', slug: 'misc' },

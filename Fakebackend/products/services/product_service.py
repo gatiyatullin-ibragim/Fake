@@ -22,7 +22,7 @@ def build_prompt(product):
     4k
     """
 
-def generate_and_save_image(product):
+def generate_and_save_image(product, replace_primary=True):
     prompt = build_prompt(product)
 
     generated_image_url = generate_product_image(prompt)
@@ -38,9 +38,10 @@ def generate_and_save_image(product):
 
     filename = f"product_{product.id}_{uuid4().hex[:12]}{extension}"
 
-    ProductImage.objects.filter(product=product, is_primary=True).update(is_primary=False)
+    if replace_primary:
+        ProductImage.objects.filter(product=product, is_primary=True).update(is_primary=False)
 
-    product_image = ProductImage(product=product, is_primary=True)
+    product_image = ProductImage(product=product, is_primary=replace_primary)
     product_image.image_url.save(filename, ContentFile(image_response.content), save=False)
     product_image.save()
 
@@ -48,7 +49,8 @@ def generate_and_save_image(product):
     local_image_url = product_image.image_url.url
     absolute_image_url = f"{backend_base}{local_image_url}" if local_image_url.startswith('/') else f"{backend_base}/{local_image_url}"
 
-    product.image = absolute_image_url
-    product.save(update_fields=['image'])
+    if replace_primary:
+        product.image = absolute_image_url
+        product.save(update_fields=['image'])
 
     return absolute_image_url

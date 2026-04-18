@@ -47,14 +47,14 @@ export class ProductDetailComponent implements OnInit {
     this.productService.getProductById(id).subscribe({
       next: (data) => {
         this.product = data;
-        // Собираем галерею: основное фото + плейсхолдеры для остальных
-        // Здесь пока условные фото в дальнейшем будут нормальные фотографии
-        this.images = [
-          data.image,
+        const generated = (data.generatedImages || []).filter((url) => !!url && url !== data.image);
+        const placeholders = [
           `https://placehold.co/600x600/1a1a1a/fff?text=Фото+2`,
           `https://placehold.co/600x600/222/fff?text=Фото+3`,
           `https://placehold.co/600x600/333/fff?text=Фото+4`,
         ];
+
+        this.images = [data.image, ...generated, ...placeholders].slice(0, 4);
 
         this.trackingService.trackView(id);
         this.loadSimilarProducts(id);

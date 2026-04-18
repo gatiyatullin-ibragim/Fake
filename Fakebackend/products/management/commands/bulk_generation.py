@@ -19,10 +19,16 @@ class Command(BaseCommand):
             default=0,
             help="Process only first N products (0 = all)",
         )
+        parser.add_argument(
+            "--replace-primary",
+            action="store_true",
+            help="Replace product.image with generated image (default: keep generated as additional image)",
+        )
 
     def handle(self, *args, **options):
         product_id = options.get("product_id")
         limit = options.get("limit") or 0
+        replace_primary = bool(options.get("replace_primary"))
 
         queryset = Product.objects.all().order_by("id")
         if product_id:
@@ -40,7 +46,7 @@ class Command(BaseCommand):
 
         for product in products:
             try:
-                image_url = generate_and_save_image(product)
+                image_url = generate_and_save_image(product, replace_primary=replace_primary)
                 success += 1
                 self.stdout.write(self.style.SUCCESS(f"[{product.id}] {product.name} -> {image_url}"))
             except Exception as exc:
