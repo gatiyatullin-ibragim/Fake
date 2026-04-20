@@ -367,11 +367,11 @@
   
   .categories-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: 320px 220px;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 300px);
     gap: 12px;
   }
-  
+
   .category-tile {
     position: relative;
     overflow: hidden;
@@ -379,10 +379,6 @@
     align-items: flex-end;
     text-decoration: none;
     cursor: pointer;
-  }
-  
-  .category-tile.tile-large {
-    grid-row: span 1;
   }
   
   .tile-bg {
@@ -395,13 +391,19 @@
     transform: scale(1.05);
   }
   
-  /* Unique gradient for each tile */
-  .tile-bg-1 { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
-  .tile-bg-2 { background: linear-gradient(135deg, #2d1b69 0%, #11998e 100%); }
-  .tile-bg-3 { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); }
-  .tile-bg-4 { background: linear-gradient(135deg, #111 0%, #434343 100%); }
-  .tile-bg-5 { background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%); }
-  .tile-bg-6 { background: linear-gradient(135deg, #16222a 0%, #3a6073 100%); }
+  /* Photo backgrounds for each tile */
+  .tile-bg-1 { background: url('/categories/t-shirts.jpg') center/cover no-repeat; }
+  .tile-bg-2 { background: url('/categories/sneakers.jpg') center/cover no-repeat; }
+  .tile-bg-3 { background: url('/categories/outerwear.jpg') center/cover no-repeat; }
+  .tile-bg-4 { background: url('/categories/shorts.jpg') center/cover no-repeat; }
+
+  /* Dark overlay so text stays legible */
+  .tile-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 60%, transparent 100%);
+  }
   
   .tile-content {
     position: relative;
@@ -511,7 +513,7 @@
     .categories-section { padding: 48px 24px; }
     .categories-grid    {
       grid-template-columns: 1fr 1fr;
-      grid-template-rows: repeat(3, 200px);
+      grid-template-rows: repeat(2, 200px);
     }
     .promo-strip        { flex-direction: column; gap: 20px; padding: 32px 24px; }
     .promo-divider      { width: 60px; height: 1px; }
@@ -525,7 +527,7 @@
     .btn-secondary      { text-align: center; }
     .categories-grid    {
       grid-template-columns: 1fr;
-      grid-template-rows: repeat(6, 160px);
+      grid-template-rows: repeat(4, 160px);
     }
     .section-header     { flex-direction: column; gap: 8px; }
   }

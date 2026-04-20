@@ -56,7 +56,7 @@
           </div>
           <div class="featured-price-tag">
             <span class="price-tag-label">ОТ</span>
-            <span class="price-tag-amount">1 999 ₸</span>
+            <span class="price-tag-amount">777 ₸</span>
           </div>
         </div>
       </div>
@@ -74,8 +74,7 @@
         @for (cat of categories; track cat.slug; let i = $index) {
           <a routerLink="/catalog"
              [queryParams]="{category: cat.slug}"
-             class="category-tile"
-             [class.tile-large]="i === 0 || i === 1">
+             class="category-tile">
             <div class="tile-bg" [class]="'tile-bg-' + (i + 1)"></div>
             <div class="tile-content">
               <h3 class="tile-name">{{ cat.name }}</h3>
@@ -118,7 +117,7 @@
       <div class="promo-divider"></div>
       <div class="promo-item">
         <span class="promo-icon">✦</span>
-        <span class="promo-text">ОРИГИНАЛ 99% ГАРАНТИРОВАНО</span>
+        <span class="promo-text">ПОЧТИ ОРИГИНАЛ АТВИЧАЮ</span>
       </div>
       <div class="promo-divider"></div>
       <div class="promo-item">

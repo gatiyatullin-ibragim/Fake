@@ -17,12 +17,10 @@ export class HomeComponent {
   private trackingService = inject(TrackingService);
 
   categories = [
-    { name: 'Футболки',       slug: 't-shirts',   label: 'SHOP ФУТБОЛКИ'   },
-    { name: 'Кроссовки',      slug: 'sneakers',   label: 'SHOP КРОССОВКИ'  },
-    { name: 'Верхняя одежда', slug: 'outerwear',  label: 'SHOP ОДЕЖДА'     },
-    { name: 'Баскетбол',      slug: 'basketball', label: 'SHOP БАСКЕТБОЛ'  },
-    { name: 'Футбол',         slug: 'football',   label: 'SHOP ФУТБОЛ'     },
-    { name: 'Шорты',          slug: 'shorts',     label: 'SHOP ШОРТЫ'      },
+    { name: 'T Shirts',  slug: 't-shirts',  label: 'SHOP T SHIRTS'  },
+    { name: 'Sneakers',  slug: 'sneakers',  label: 'SHOP SNEAKERS'  },
+    { name: 'Outerwear', slug: 'outerwear', label: 'SHOP OUTERWEAR' },
+    { name: 'Shorts',    slug: 'shorts',    label: 'SHOP SHORTS'    },
   ];
 
   recommendedProducts: Product[] = [];
