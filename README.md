@@ -124,11 +124,21 @@ Auth header for protected endpoints:
 From `Fakebackend` folder:
 
 ```bash
-python manage.py seed_products --count 120
+python manage.py bulk_generation #for all products
 ```
 
-Optional reset before seeding:
+```bash
+python manage.py bulk_generation --product-id 1 #for one product with id-1
+```
 
 ```bash
-python manage.py seed_products --count 120 --reset
+python manage.py bulk_generation --limit 10 #for first 10 products
+```
+
+```bash
+python manage.py bulk_generation --replace-primary #to replace main photo
+```
+
+```bash
+python manage.py bulkgeneration #works too
 ```
