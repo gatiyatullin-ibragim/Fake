@@ -22,13 +22,13 @@
 
   @if (!isLoading && orders.length > 0) {
     <div class="orders-list">
-      @for (order of orders; track order.id) {
+      @for (order of orders; track order.id; let idx = $index) {
 
         <!-- Карточка заказа -->
         <div class="order-card" [class.expanded]="selectedOrder?.id === order.id">
           <div class="order-header" (click)="openDetail(order)">
             <div class="order-meta">
-              <span class="order-id"># {{ order.id }}</span>
+              <span class="order-id"># {{ order.order_number ? order.order_number : (idx + 1) }}</span>
               <span class="order-date">{{ order.created_at | date:'dd.MM.yyyy, HH:mm' }}</span>
             </div>
             <div class="order-info">

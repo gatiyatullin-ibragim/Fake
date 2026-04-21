@@ -20,9 +20,14 @@ def serialize_order_item(item):
     }
 
 
-def serialize_order(order, detailed=False):
+def get_order_number(order):
+    return Order.objects.filter(user=order.user, id__lte=order.id).count()
+
+
+def serialize_order(order, detailed=False, order_number=None):
     data = {
         'id': order.id,
+        'order_number': order_number if order_number is not None else get_order_number(order),
         'status': order.status,
         'is_paid': order.is_paid,
         'total_price': str(order.total_price),
@@ -83,7 +88,10 @@ def create_order(request):
         return Response({'error': 'Ни один товар не добавлен', 'details': errors},
                         status=status.HTTP_400_BAD_REQUEST)
 
-    return Response(serialize_order(order, detailed=True), status=status.HTTP_201_CREATED)
+    return Response(
+        serialize_order(order, detailed=True, order_number=get_order_number(order)),
+        status=status.HTTP_201_CREATED,
+    )
 
 
 
@@ -91,8 +99,11 @@ def create_order(request):
 @permission_classes([IsAuthenticated])
 def get_orders(request):
     user = request.user
-    orders = Order.objects.filter(user=user)
-    return Response([serialize_order(o) for o in orders])
+    orders = list(Order.objects.filter(user=user).order_by('-created_at', '-id'))
+    order_ids_asc = list(Order.objects.filter(user=user).order_by('created_at', 'id').values_list('id', flat=True))
+    number_by_id = {order_id: idx + 1 for idx, order_id in enumerate(order_ids_asc)}
+
+    return Response([serialize_order(o, order_number=number_by_id.get(o.id)) for o in orders])
 
 
 
@@ -101,6 +112,6 @@ def get_orders(request):
 def get_order_detail(request, pk):
     try:
         order = Order.objects.get(pk=pk, user=request.user)
-        return Response(serialize_order(order, detailed=True))
+        return Response(serialize_order(order, detailed=True, order_number=get_order_number(order)))
     except Order.DoesNotExist:
         return Response({'error': 'Заказ не найден'}, status=status.HTTP_404_NOT_FOUND)

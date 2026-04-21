@@ -10,6 +10,7 @@ export interface OrderItem {
 
 export interface Order {
   id: number;
+  order_number?: number;
   status: 'pending' | 'completed' | 'cancelled';
   is_paid: boolean;
   total_price: string;
