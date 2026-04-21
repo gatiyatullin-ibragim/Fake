@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, Observable, of, throwError, tap } from 'rxjs';
+import { API_URL } from '../core/services/api-config';
 
 export interface User {
   id: number;
@@ -23,7 +24,7 @@ interface AuthResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly apiUrl = 'http://localhost:8000/api/users';
+  private readonly apiUrl = `${API_URL}/users`;
   private readonly accessTokenKey = 'auth_access_token';
   private readonly refreshTokenKey = 'auth_refresh_token';
   user = signal<User | null>(null);

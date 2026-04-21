@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { Product } from '../../models/product.model';
 import { Category } from '../../models/category.model';
+import { API_URL } from './api-config';
 
 interface ProductApiModel {
   id: number;
@@ -39,7 +40,7 @@ export interface PaginatedProductsResponse {
   providedIn: 'root'
 })
 export class ProductService {
-  private apiUrl = 'http://localhost:8000/api';
+  private apiUrl = API_URL;
 
   constructor(private http: HttpClient) {}
 

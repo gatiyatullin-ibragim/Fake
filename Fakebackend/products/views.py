@@ -14,6 +14,55 @@ from users.models import UserPreference
 from .services.product_service import generate_and_save_image
 
 
+SESSION_INTERESTS_KEY = 'interest_counts'
+
+
+def normalize_tag(tag) -> str:
+	return str(tag).strip().lower()
+
+
+def normalized_product_tags(product: Product) -> list[str]:
+	return [
+		normalize_tag(tag)
+		for tag in (product.tags or [])
+		if isinstance(tag, str) and normalize_tag(tag)
+	]
+
+
+def get_session_interest_counts(request) -> dict:
+	raw = request.session.get(SESSION_INTERESTS_KEY, {})
+	if not isinstance(raw, dict):
+		return {}
+
+	result = {}
+	for tag, value in raw.items():
+		norm = normalize_tag(tag)
+		if not norm:
+			continue
+		try:
+			result[norm] = result.get(norm, 0) + int(value)
+		except (TypeError, ValueError):
+			continue
+	return result
+
+
+def save_session_interest_counts(request, counts: dict) -> None:
+	request.session[SESSION_INTERESTS_KEY] = counts
+	request.session.modified = True
+
+
+def merge_scores(target: dict, source: dict, weight: int = 1) -> None:
+	for tag, value in (source or {}).items():
+		norm = normalize_tag(tag)
+		if not norm:
+			continue
+		try:
+			numeric = int(value)
+		except (TypeError, ValueError):
+			continue
+		target[norm] = target.get(norm, 0) + numeric * max(1, weight)
+
+
 def build_generated_images(product: Product) -> list[str]:
 	backend_base = settings.BACKEND_BASE_URL
 
@@ -49,23 +98,23 @@ def score_by_preferences(product: Product, preference_scores: dict) -> int:
 	if not preference_scores:
 		return 0
 	score = 0
-	for tag in (product.tags or []):
+	for tag in normalized_product_tags(product):
 		score += int(preference_scores.get(tag, 0))
 	return score
 
 
 def build_interest_scores(request) -> dict:
 	scores = {}
+	merge_scores(scores, get_session_interest_counts(request))
 
 	if request.user and request.user.is_authenticated:
 		pref, _ = UserPreference.objects.get_or_create(user=request.user)
-		for tag, value in (pref.counts or {}).items():
-			scores[tag] = scores.get(tag, 0) + int(value)
+		merge_scores(scores, pref.counts or {})
 
 	interests_param = request.query_params.get('interests', '')
 	if interests_param:
 		for raw_tag in interests_param.split(','):
-			tag = raw_tag.strip()
+			tag = normalize_tag(raw_tag)
 			if not tag:
 				continue
 			scores[tag] = scores.get(tag, 0) + 5
@@ -109,15 +158,21 @@ def recommend_products(request, base_products: list[Product]) -> list[Product]:
 
 
 def get_interest_scores(request) -> dict:
+	scores = get_session_interest_counts(request)
+
 	interests_param = request.query_params.get('interests', '')
 	if interests_param:
-		return {tag.strip(): 1 for tag in interests_param.split(',') if tag.strip()}
+		for raw_tag in interests_param.split(','):
+			tag = normalize_tag(raw_tag)
+			if tag:
+				scores[tag] = scores.get(tag, 0) + 1
+		return scores
 
 	if request.user and request.user.is_authenticated:
 		pref, _ = UserPreference.objects.get_or_create(user=request.user)
-		return pref.counts or {}
+		merge_scores(scores, pref.counts or {})
 
-	return {}
+	return scores
 
 
 def search_products(query: str) -> list[Product]:
@@ -298,21 +353,39 @@ def get_similar_products(request, pk: int):
 	return Response([serialize_product(item[1]) for item in scored[:8]])
 
 
-@api_view(['POST'])
-def track_click(request):
+def _track_product_event(request, boost: int):
 	product_id = request.data.get('product_id')
 	if not product_id:
 		return Response({'error': 'product_id обязателен'}, status=400)
 
 	product = get_object_or_404(Product, pk=product_id)
 
-	if not request.user or not request.user.is_authenticated:
-		return Response({'tracked': False, 'reason': 'not_authenticated'})
+	tags = normalized_product_tags(product)
+	weight = max(1, boost)
 
-	pref, _ = UserPreference.objects.get_or_create(user=request.user)
-	pref.increment_tags(product.tags or [])
+	if request.user and request.user.is_authenticated:
+		pref, _ = UserPreference.objects.get_or_create(user=request.user)
+		for tag in tags:
+			pref.counts[tag] = int(pref.counts.get(tag, 0)) + weight
+		pref.save(update_fields=['counts', 'updated_at'])
+		return Response({'tracked': True, 'preferences': pref.counts, 'source': 'user'})
 
-	return Response({'tracked': True, 'preferences': pref.counts})
+	session_counts = get_session_interest_counts(request)
+	for tag in tags:
+		session_counts[tag] = int(session_counts.get(tag, 0)) + weight
+	save_session_interest_counts(request, session_counts)
+
+	return Response({'tracked': True, 'preferences': session_counts, 'source': 'session'})
+
+
+@api_view(['POST'])
+def track_view(request):
+	return _track_product_event(request, boost=1)
+
+
+@api_view(['POST'])
+def track_click(request):
+	return _track_product_event(request, boost=2)
 
 
 @api_view(['POST'])

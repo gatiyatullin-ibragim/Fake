@@ -14,6 +14,7 @@ from pathlib import Path
 from datetime import timedelta
 import os
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -32,11 +33,28 @@ def _load_env_file(env_path: Path) -> None:
 
 _load_env_file(BASE_DIR.parent / '.env')
 
-SECRET_KEY = 'django-insecure-rfc40r_ze)i_x=834$6p8ldsr_2iiltm)s_*5%@852bz(q3pj*'
+def _env_bool(name: str, default: bool) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {'1', 'true', 'yes', 'on'}
 
-DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+def _env_list(name: str, default: str) -> list[str]:
+    raw = os.environ.get(name, default)
+    return [item.strip() for item in raw.split(',') if item.strip()]
+
+
+DEBUG = _env_bool('DEBUG', True)
+
+SECRET_KEY = os.environ.get('SECRET_KEY', '')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-dev-only-change-me'
+    else:
+        raise RuntimeError('SECRET_KEY is required when DEBUG is False')
+
+ALLOWED_HOSTS = _env_list('ALLOWED_HOSTS', 'localhost,127.0.0.1')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -64,9 +82,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:4200',
-]
+CORS_ALLOWED_ORIGINS = _env_list('CORS_ALLOWED_ORIGINS', 'http://localhost:4200')
 CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'Fakebackend.urls'
@@ -126,7 +142,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LEONARDO_API_KEY = os.environ.get('LEONARDO_API_KEY') or os.environ.get('api_key', '')
+LEONARDO_API_KEY = os.environ.get('LEONARDO_API_KEY', '')
 LEONARDO_MODEL_ID = os.environ.get('LEONARDO_MODEL_ID', 'b24e16ff-06e3-43eb-8d33-4416c2d75876')
 BACKEND_BASE_URL = os.environ.get('BACKEND_BASE_URL', 'http://localhost:8000')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

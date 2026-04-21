@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { API_URL } from './api-config';
 
 @Injectable({ providedIn: 'root' })
 export class TrackingService {
-  private trackViewUrl = 'http://localhost:8000/api/products/track-view/';
-  private trackClickUrl = 'http://localhost:8000/api/products/track-click/';
+  private trackViewUrl = `${API_URL}/products/track-view/`;
+  private trackClickUrl = `${API_URL}/products/track-click/`;
 
   constructor(private http: HttpClient) {}
 
