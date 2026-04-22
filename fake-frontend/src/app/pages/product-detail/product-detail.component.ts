@@ -18,14 +18,16 @@ export class ProductDetailComponent implements OnInit {
   similarProducts: Product[] = [];
   isLoading = true;
   errorMessage = '';
-  selectedSize: string | null = null;
+  selectedSize: string | number | null = null;
   addedToCart = false;
 
   // Галерея: активный индекс и массив фото
   activeImageIndex = 0;
   images: string[] = [];
 
-  sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+  sizes: (string | number)[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+
+  private readonly SNEAKER_SIZES = [36, 37, 38, 39, 40, 41, 42, 43, 44, 45];
 
   specs = [
     { label: 'Материал',      value: '100% хлопок (почти)'  },
@@ -47,6 +49,9 @@ export class ProductDetailComponent implements OnInit {
     this.productService.getProductById(id).subscribe({
       next: (data) => {
         this.product = data;
+        if (data.category?.slug === 'sneakers') {
+          this.sizes = this.SNEAKER_SIZES;
+        }
         const generated = (data.generatedImages || []).filter((url) => !!url && url !== data.image);
         const placeholders = [
           `https://placehold.co/600x600/1a1a1a/fff?text=Фото+2`,
@@ -94,7 +99,7 @@ export class ProductDetailComponent implements OnInit {
       (this.activeImageIndex + 1) % this.images.length;
   }
 
-  selectSize(size: string): void {
+  selectSize(size: string | number): void {
     this.selectedSize = size;
   }
 
@@ -107,7 +112,7 @@ export class ProductDetailComponent implements OnInit {
       price: this.product.price,
       image: this.product.image,
       brand: this.product.brand,
-      size: this.selectedSize,
+      size: String(this.selectedSize),
     });
 
     this.addedToCart = true;
